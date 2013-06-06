@@ -1,5 +1,7 @@
 
-# fluid-slider
+# Fluid Slider
+
+Slider component built on top of [Swipe](https://github.com/component/swipe). Useful for rwd projects because of configurable breakpoints/slides.
 
   fluid slider
 
@@ -9,7 +11,23 @@
 
 ## API
 
-   
+### FluidSlider(el, options)
+
+Create a fluid slider object for `el`. This should be a container element that wraps a list of several items. View ./example/index.html for a working example.
+
+Supports the options:
+
+ - breakpointItems: ```{Object}``` Store viewport width/px(key) and amount(val) of visible items f.e. {0: 1, 500: 2}
+ - sensitivity: ```{Number}``` Sensitivity while touchmoving, defaults to 50
+ - itemsToSlide: ```{Number}``` Amount of items to slide, defaults to visibleItems/2
+
+
+### FluidSlider#update
+
+This method should be invoked when the swipe element has been resized, or an item has been added or removed
+
+
+#### Also inherits all of the [Swipe](https://github.com/component/swipe) functionality!
 
 ## License
 
