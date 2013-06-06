@@ -1,7 +1,7 @@
 
 # Fluid Slider
 
-Slider component built on top of [Swipe](https://github.com/component/swipe). Useful for rwd projects because of configurable breakpoints/slides.
+Percentage-based Slider component built on top of [Swipe](https://github.com/component/swipe). Useful for rwd projects because of configurable breakpoints/slides.
 
 
 ## Installation
