@@ -3,11 +3,11 @@
 
 Slider component built on top of [Swipe](https://github.com/component/swipe). Useful for rwd projects because of configurable breakpoints/slides.
 
-  fluid slider
 
 ## Installation
 
-    $ component install jonykrause/fluid-slider
+$ component install jonykrause/fluid-slider
+
 
 ## API
 
