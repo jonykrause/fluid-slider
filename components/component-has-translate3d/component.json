@@ -1,0 +1,15 @@
+{
+  "name": "has-translate3d",
+  "repo": "component/has-translate3d",
+  "description": "Feature detection of css translate3d",
+  "version": "0.0.2",
+  "keywords": [],
+  "dependencies": {
+    "component/transform-property": "*"
+  },
+  "development": {},
+  "license": "MIT",
+  "scripts": [
+    "index.js"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "event-manager",
+  "repo": "component/event-manager",
+  "description": "Event manager used by 'events' and 'delegates' to provide higher-level event handling",
+  "version": "1.0.0",
+  "keywords": [
+    "event",
+    "events",
+    "subscriptions"
+  ],
+  "dependencies": {},
+  "development": {
+    "component/emitter": "*",
+    "component/assert": "*"
+  },
+  "license": "MIT",
+  "scripts": [
+    "index.js"
+  ]
+}
