@@ -6,7 +6,7 @@ Slider component built on top of [Swipe](https://github.com/component/swipe). Us
 
 ## Installation
 
-$ component install jonykrause/fluid-slider
+    $ component install jonykrause/fluid-slider
 
 
 ## API
