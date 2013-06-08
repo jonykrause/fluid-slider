@@ -27,10 +27,10 @@
       </ul>
     </div>
 
-    <button onclick="cats.swiper.prev()">prev</button>
-    <button onclick="cats.swiper.next()">next</button>
-    <button onclick="cats.swiper.play()">play</button>
-    <button onclick="cats.swiper.stop()">stop</button>
+    <button onclick="insta.swiper.prev()">prev</button>
+    <button onclick="insta.swiper.next()">next</button>
+    <button onclick="insta.swiper.play()">play</button>
+    <button onclick="insta.swiper.stop()">stop</button>
 
 
     <script src="../build/build.js"></script>
@@ -43,8 +43,8 @@
           800: 3,
           1200: 4
         };
-        var cats = slider(el, { breakpointItems: breakpointItems });
-        cats.swiper.on('show', function(i) {
+        var insta = slider(el, { breakpointItems: breakpointItems });
+        insta.swiper.on('show', function(i) {
           console.log('Current index: ', i);
         });
     </script>
