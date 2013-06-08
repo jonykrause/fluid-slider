@@ -199,42 +199,1137 @@ require.relative = function(parent) {
 
   return localRequire;
 };
-require.register("component-event/index.js", Function("exports, require, module",
-"\n/**\n * Bind `el` event `type` to `fn`.\n *\n * @param {Element} el\n * @param {String} type\n * @param {Function} fn\n * @param {Boolean} capture\n * @return {Function}\n * @api public\n */\n\nexports.bind = function(el, type, fn, capture){\n  if (el.addEventListener) {\n    el.addEventListener(type, fn, capture || false);\n  } else {\n    el.attachEvent('on' + type, fn);\n  }\n  return fn;\n};\n\n/**\n * Unbind `el` event `type`'s callback `fn`.\n *\n * @param {Element} el\n * @param {String} type\n * @param {Function} fn\n * @param {Boolean} capture\n * @return {Function}\n * @api public\n */\n\nexports.unbind = function(el, type, fn, capture){\n  if (el.removeEventListener) {\n    el.removeEventListener(type, fn, capture || false);\n  } else {\n    el.detachEvent('on' + type, fn);\n  }\n  return fn;\n};\n//@ sourceURL=component-event/index.js"
-));
-require.register("component-event-manager/index.js", Function("exports, require, module",
-"\n\n/**\n * Expose `EventManager`.\n */\n\nmodule.exports = EventManager;\n\n/**\n * Initialize an `EventManager` with the given\n * `target` object which events will be bound to,\n * and the `obj` which will receive method calls.\n *\n * @param {Object} target\n * @param {Object} obj\n * @api public\n */\n\nfunction EventManager(target, obj) {\n  this.target = target;\n  this.obj = obj;\n  this._bindings = {};\n}\n\n/**\n * Register bind function.\n *\n * @param {Function} fn\n * @return {EventManager} self\n * @api public\n */\n\nEventManager.prototype.onbind = function(fn){\n  this._bind = fn;\n  return this;\n};\n\n/**\n * Register unbind function.\n *\n * @param {Function} fn\n * @return {EventManager} self\n * @api public\n */\n\nEventManager.prototype.onunbind = function(fn){\n  this._unbind = fn;\n  return this;\n};\n\n/**\n * Bind to `event` with optional `method` name.\n * When `method` is undefined it becomes `event`\n * with the \"on\" prefix.\n *\n *    events.bind('login') // implies \"onlogin\"\n *    events.bind('login', 'onLogin')\n *\n * @param {String} event\n * @param {String} [method]\n * @return {Function} callback\n * @api public\n */\n\nEventManager.prototype.bind = function(event, method){\n  var fn = this.addBinding.apply(this, arguments);\n  if (this._onbind) this._onbind(event, method, fn);\n  this._bind(event, fn);\n  return fn;\n};\n\n/**\n * Add event binding.\n *\n * @param {String} event\n * @param {String} method\n * @return {Function} callback\n * @api private\n */\n\nEventManager.prototype.addBinding = function(event, method){\n  var obj = this.obj;\n  var method = method || 'on' + event;\n  var args = [].slice.call(arguments, 2);\n\n  // callback\n  function callback() {\n    var a = [].slice.call(arguments).concat(args);\n    obj[method].apply(obj, a);\n  }\n\n  // subscription\n  this._bindings[event] = this._bindings[event] || {};\n  this._bindings[event][method] = callback;\n\n  return callback;\n};\n\n/**\n * Unbind a single binding, all bindings for `event`,\n * or all bindings within the manager.\n *\n *     evennts.unbind('login', 'onLogin')\n *     evennts.unbind('login')\n *     evennts.unbind()\n *\n * @param {String} [event]\n * @param {String} [method]\n * @return {Function} callback\n * @api public\n */\n\nEventManager.prototype.unbind = function(event, method){\n  if (0 == arguments.length) return this.unbindAll();\n  if (1 == arguments.length) return this.unbindAllOf(event);\n  var fn = this._bindings[event][method];\n  if (this._onunbind) this._onunbind(event, method, fn);\n  this._unbind(event, fn);\n  return fn;\n};\n\n/**\n * Unbind all events.\n *\n * @api private\n */\n\nEventManager.prototype.unbindAll = function(){\n  for (var event in this._bindings) {\n    this.unbindAllOf(event);\n  }\n};\n\n/**\n * Unbind all events for `event`.\n *\n * @param {String} event\n * @api private\n */\n\nEventManager.prototype.unbindAllOf = function(event){\n  var bindings = this._bindings[event];\n  if (!bindings) return;\n  for (var method in bindings) {\n    this.unbind(event, method);\n  }\n};\n//@ sourceURL=component-event-manager/index.js"
-));
-require.register("component-events/index.js", Function("exports, require, module",
-"\n/**\n * Module dependencies.\n */\n\nvar Manager = require('event-manager')\n  , event = require('event');\n\n/**\n * Return a new event manager.\n */\n\nmodule.exports = function(target, obj){\n  var manager = new Manager(target, obj);\n\n  manager.onbind(function(name, fn){\n    event.bind(target, name, fn);\n  });\n\n  manager.onunbind(function(name, fn){\n    event.unbind(target, name, fn);\n  });\n\n  return manager;\n};\n//@ sourceURL=component-events/index.js"
-));
-require.register("component-has-translate3d/index.js", Function("exports, require, module",
-"\nvar prop = require('transform-property');\n// IE8<= doesn't have `getComputedStyle`\nif (!prop || !window.getComputedStyle) return module.exports = false;\n\nvar map = {\n  webkitTransform: '-webkit-transform',\n  OTransform: '-o-transform',\n  msTransform: '-ms-transform',\n  MozTransform: '-moz-transform',\n  transform: 'transform'\n};\n\n// from: https://gist.github.com/lorenzopolidori/3794226\nvar el = document.createElement('div');\nel.style[prop] = 'translate3d(1px,1px,1px)';\ndocument.body.insertBefore(el, null);\nvar val = getComputedStyle(el).getPropertyValue(map[prop]);\ndocument.body.removeChild(el);\nmodule.exports = null != val && val.length && 'none' != val;\n//@ sourceURL=component-has-translate3d/index.js"
-));
-require.register("component-transform-property/index.js", Function("exports, require, module",
-"\nvar styles = [\n  'webkitTransform',\n  'MozTransform',\n  'msTransform',\n  'OTransform',\n  'transform'\n];\n\nvar el = document.createElement('p');\nvar style;\n\nfor (var i = 0; i < styles.length; i++) {\n  style = styles[i];\n  if (null != el.style[style]) {\n    module.exports = style;\n    break;\n  }\n}\n//@ sourceURL=component-transform-property/index.js"
-));
-require.register("jonykrause-translate/index.js", Function("exports, require, module",
-"\n/**\n * Module dependencies.\n */\n\nvar transform = require('transform-property');\nvar has3d = require('has-translate3d');\n\n/**\n * Expose `translate`.\n */\n\nmodule.exports = translate;\n\n/**\n * Translate `el` by `(x, y) units`.\n *\n * @param {Element} el\n * @param {Number} x\n * @param {Number} y\n * @param {String} unit\n * @api public\n */\n\nfunction translate(el, x, y, unit) {\n  unit || (unit = 'px');\n  if (typeof transform === 'string') {\n    if (has3d) {\n      el.style[transform] = 'translate3d(' + x + unit + ',' + y + unit + ', 0)';\n    } else {\n      el.style[transform] = 'translate(' + x + unit + ',' + y + unit + ')';\n    }\n  } else {\n    el.style.left = x;\n    el.style.top = y;\n  }\n};\n\n//@ sourceURL=jonykrause-translate/index.js"
-));
-require.register("component-emitter/index.js", Function("exports, require, module",
-"\n/**\n * Expose `Emitter`.\n */\n\nmodule.exports = Emitter;\n\n/**\n * Initialize a new `Emitter`.\n *\n * @api public\n */\n\nfunction Emitter(obj) {\n  if (obj) return mixin(obj);\n};\n\n/**\n * Mixin the emitter properties.\n *\n * @param {Object} obj\n * @return {Object}\n * @api private\n */\n\nfunction mixin(obj) {\n  for (var key in Emitter.prototype) {\n    obj[key] = Emitter.prototype[key];\n  }\n  return obj;\n}\n\n/**\n * Listen on the given `event` with `fn`.\n *\n * @param {String} event\n * @param {Function} fn\n * @return {Emitter}\n * @api public\n */\n\nEmitter.prototype.on = function(event, fn){\n  this._callbacks = this._callbacks || {};\n  (this._callbacks[event] = this._callbacks[event] || [])\n    .push(fn);\n  return this;\n};\n\n/**\n * Adds an `event` listener that will be invoked a single\n * time then automatically removed.\n *\n * @param {String} event\n * @param {Function} fn\n * @return {Emitter}\n * @api public\n */\n\nEmitter.prototype.once = function(event, fn){\n  var self = this;\n  this._callbacks = this._callbacks || {};\n\n  function on() {\n    self.off(event, on);\n    fn.apply(this, arguments);\n  }\n\n  fn._off = on;\n  this.on(event, on);\n  return this;\n};\n\n/**\n * Remove the given callback for `event` or all\n * registered callbacks.\n *\n * @param {String} event\n * @param {Function} fn\n * @return {Emitter}\n * @api public\n */\n\nEmitter.prototype.off =\nEmitter.prototype.removeListener =\nEmitter.prototype.removeAllListeners = function(event, fn){\n  this._callbacks = this._callbacks || {};\n\n  // all\n  if (0 == arguments.length) {\n    this._callbacks = {};\n    return this;\n  }\n\n  // specific event\n  var callbacks = this._callbacks[event];\n  if (!callbacks) return this;\n\n  // remove all handlers\n  if (1 == arguments.length) {\n    delete this._callbacks[event];\n    return this;\n  }\n\n  // remove specific handler\n  var i = callbacks.indexOf(fn._off || fn);\n  if (~i) callbacks.splice(i, 1);\n  return this;\n};\n\n/**\n * Emit `event` with the given args.\n *\n * @param {String} event\n * @param {Mixed} ...\n * @return {Emitter}\n */\n\nEmitter.prototype.emit = function(event){\n  this._callbacks = this._callbacks || {};\n  var args = [].slice.call(arguments, 1)\n    , callbacks = this._callbacks[event];\n\n  if (callbacks) {\n    callbacks = callbacks.slice(0);\n    for (var i = 0, len = callbacks.length; i < len; ++i) {\n      callbacks[i].apply(this, args);\n    }\n  }\n\n  return this;\n};\n\n/**\n * Return array of callbacks for `event`.\n *\n * @param {String} event\n * @return {Array}\n * @api public\n */\n\nEmitter.prototype.listeners = function(event){\n  this._callbacks = this._callbacks || {};\n  return this._callbacks[event] || [];\n};\n\n/**\n * Check if this emitter has `event` handlers.\n *\n * @param {String} event\n * @return {Boolean}\n * @api public\n */\n\nEmitter.prototype.hasListeners = function(event){\n  return !! this.listeners(event).length;\n};\n//@ sourceURL=component-emitter/index.js"
-));
-require.register("jkroso-computed-style/index.js", Function("exports, require, module",
-"\n/**\n * Get the computed style of a DOM element\n * \n *   style(document.body) // => {width:'500px', ...}\n * \n * @param {Element} element\n * @return {Object}\n */\n\n// Accessing via window for jsDOM support\nmodule.exports = window.getComputedStyle\n\n// Fallback to elem.currentStyle for IE < 9\nif (!module.exports) {\n\tmodule.exports = function (elem) {\n\t\treturn elem.currentStyle\n\t}\n}\n//@ sourceURL=jkroso-computed-style/index.js"
-));
-require.register("jonykrause-swipe/index.js", Function("exports, require, module",
-"\n/**\n * Module dependencies.\n */\n\nvar translate = require('translate');\nvar style = require('computed-style');\nvar Emitter = require('emitter');\nvar events = require('events');\nvar min = Math.min;\nvar max = Math.max;\n\n/**\n * Expose `Swipe`.\n */\n\nmodule.exports = Swipe;\n\n/**\n * Turn `el` into a swipeable list.\n *\n * @param {Element} el\n * @api public\n */\n\nfunction Swipe(el) {\n  if (!(this instanceof Swipe)) return new Swipe(el);\n  if (!el) throw new TypeError('Swipe() requires an element');\n  this.child = el.children[0];\n  this.currentEl = this.children().visible[0];\n  this.visible = this.children().visible.length;\n  this.unit = '%';\n  this.currentVisible = 0;\n  this.itemsToSwipe = 1;\n  this.sensitivity = 1;\n  this.current = 0;\n  this.el = el;\n  this.interval(5000);\n  this.duration(300);\n  this.show(0, 0, { silent: true });\n  this.bind();\n}\n\n/**\n * Mixin `Emitter`.\n */\n\nEmitter(Swipe.prototype);\n\n/**\n * Refresh sizing data.\n *\n * @api public\n */\n\nSwipe.prototype.refresh = function(){\n  var children = this.children();\n  var visible = children.visible.length;\n  var prev = this.visible || visible;\n\n  var i = indexOf(children.visible, this.currentEl);\n\n  // we removed/added item(s), update current\n  if (visible < prev && i <= this.currentVisible && i >= 0) {\n    this.currentVisible -= this.currentVisible - i;\n  } else if (visible > prev && i > this.currentVisible) {\n    this.currentVisible += i - this.currentVisible;\n  }\n\n  this.visible = visible;\n  this.childWidth = this.el.getBoundingClientRect().width;\n  this.width = Math.ceil(this.childWidth * visible);\n  this.child.style.width = this.width + 'px';\n  this.child.style.height = this.height + 'px';\n  this.show(this.currentVisible, 0, { silent: true });\n};\n\n/**\n * Bind event handlers.\n *\n * @api public\n */\n\nSwipe.prototype.bind = function(){\n  this.events = events(this.child, this);\n  this.events.bind('mousedown', 'ontouchstart');\n  this.events.bind('mousemove', 'ontouchmove');\n  this.events.bind('touchstart');\n  this.events.bind('touchmove');\n\n  this.docEvents = events(document, this);\n  this.docEvents.bind('mouseup', 'ontouchend');\n  this.docEvents.bind('touchend');\n};\n\n/**\n * Unbind event handlers.\n *\n * @api public\n */\n\nSwipe.prototype.unbind = function(){\n  this.events.unbind();\n  this.docEvents.unbind();\n};\n\n/**\n * Handle touchstart.\n *\n * @api private\n */\n\nSwipe.prototype.ontouchstart = function(e){\n  e.preventDefault();\n  e.stopPropagation();  \n  if (e.touches) e = e.touches[0];\n\n  this.transitionDuration(0);\n  this.dx = 0;\n  this.lock = false;\n  this.ignore = false;\n\n  this.down = {\n    x: e.pageX,\n    y: e.pageY,\n    at: new Date\n  };\n};\n\n/**\n * Handle touchmove.\n *\n * For the first and last slides\n * we apply some resistence to help\n * indicate that you're at the edges.\n *\n * @api private\n */\n\nSwipe.prototype.ontouchmove = function(e){\n  if (!this.down || this.ignore) return;\n  if (e.touches && e.touches.length > 1) return;\n  if (e.touches) {\n    var ev = e;\n    e = e.touches[0];\n  }\n  var s = this.down;\n  var x = e.pageX;\n  var w = this.childWidth;\n  var i = this.currentVisible;\n  this.dx = x - s.x;\n\n  // determine dy and the slope\n  if (!this.lock) {\n    this.lock = true;\n    var y = e.pageY;\n    var dy = y - s.y;\n    var slope = dy / this.dx;\n\n    // if is greater than 1 or -1, we're swiping up/down\n    if (slope > 1 || slope < -1) {\n      this.ignore = true;\n      return;\n    }\n  }\n\n  // when we overwrite touch event with e.touches[0], it doesn't\n  // have the preventDefault method. e.preventDefault() prevents\n  // multiaxis scrolling when moving from left to right\n  (ev || e).preventDefault();\n\n  var dir = this.dx < 0 ? 1 : 0;\n  if (this.isFirst() && 0 == dir) this.dx /= 2;\n  if (this.isLast() && 1 == dir) this.dx /= 2;\n  translate(this.child, -((i * w) + -this.dx / this.sensitivity), 0, this.unit);\n};\n\n/**\n * Handle touchend.\n *\n * @api private\n */\n\nSwipe.prototype.ontouchend = function(e){\n  if (!this.down) return;\n  e.stopPropagation();\n\n  // touches\n  if (e.changedTouches) e = e.changedTouches[0];\n\n  // setup\n  var dx = this.dx;\n  var x = e.pageX;\n  var w = this.childWidth;\n\n  // < 200ms swipe\n  var ms = new Date - this.down.at;\n  var threshold = ms < 200 ? w / 10 : w / 2;\n  var dir = dx < 0 ? 1 : 0;\n  var half = Math.abs(dx) >= threshold;\n\n  // clear\n  this.down = null;\n\n  // first -> next\n  if (this.isFirst() && 1 == dir && half) return this.next();\n\n  // first -> first\n  if (this.isFirst()) return this.prev();\n\n  // last -> last\n  if (this.isLast() && 1 == dir) return this.next();\n\n  // N -> N + 1\n  if (1 == dir && half) return this.next();\n\n  // N -> N - 1\n  if (0 == dir && half) return this.prev();\n\n  // N -> N\n  this.show(this.currentVisible);\n};\n\n/**\n * Set transition duration to `ms`.\n *\n * @param {Number} ms\n * @return {Swipe} self\n * @api public\n */\n\nSwipe.prototype.duration = function(ms){\n  this._duration = ms;\n  return this;\n};\n\n/**\n * Set cycle interval to `ms`.\n *\n * @param {Number} ms\n * @return {Swipe} self\n * @api public\n */\n\nSwipe.prototype.interval = function(ms){\n  this._interval = ms;\n  return this;\n};\n\n/**\n * Play through all the elements.\n *\n * @return {Swipe} self\n * @api public\n */\n\nSwipe.prototype.play = function(){\n  if (this.timer) return;\n  this.timer = setInterval(this.cycle.bind(this), this._interval);\n  return this;\n};\n\n/**\n * Stop playing.\n *\n * @return {Swipe} self\n * @api public\n */\n\nSwipe.prototype.stop = function(){\n  clearInterval(this.timer);\n  this.timer = null;\n  return this;\n};\n\n/**\n * Show the next slide, when the end\n * is reached start from the beginning.\n *\n * @api public\n */\n\nSwipe.prototype.cycle = function(){\n  if (this.isLast()) {\n    this.currentVisible = -this.itemsToSwipe;\n    this.next();\n  } else {\n    this.next();\n  }\n};\n\n/**\n * Check if we're on the first visible slide.\n *\n * @return {Boolean}\n * @api public\n */\n\nSwipe.prototype.isFirst = function(){\n  return this.currentVisible == 0;\n};\n\n/**\n * Check if we're on the last visible slide.\n *\n * @return {Boolean}\n * @api public\n */\n\nSwipe.prototype.isLast = function(){\n  return this.currentVisible == this.visible - this.itemsToSwipe;\n};\n\n/**\n * Show the previous slide, if any.\n *\n * @return {Swipe} self\n * @api public\n */\n\nSwipe.prototype.prev = function(){\n  this.show(this.currentVisible - this.itemsToSwipe);\n  return this;\n};\n\n/**\n * Show the next slide, if any.\n *\n * @return {Swipe} self\n * @api public\n */\n\nSwipe.prototype.next = function(){\n  this.show(this.currentVisible + this.itemsToSwipe);\n  return this;\n};\n\n/**\n * Show slide `i`.\n *\n * Emits `show `event\n *\n * @param {Number} i\n * @return {Swipe} self\n * @api public\n */\n\nSwipe.prototype.show = function(i, ms, options){\n  options = options || {};\n  if (null == ms) ms = this._duration;\n  var children = this.children();\n  i = max(0, min(i, children.visible.length - 1));\n  this.currentVisible = i;\n  this.currentEl = children.visible[i];\n  this.current = indexOf(children.all, this.currentEl);\n  this.transitionDuration(ms);\n  translate(this.child, -this.childWidth * i, 0, this.unit);\n  if (!options.silent) this.emit('show', this.current, this.currentEl);\n  return this;\n};\n\n/**\n * Return children categorized by visibility.\n *\n * @return {Object}\n * @api private\n */\n\nSwipe.prototype.children = function(){\n  var els = this.child.children;\n\n  var ret = {\n    all: els,\n    visible: [],\n    hidden: []\n  };\n\n  for (var i = 0; i < els.length; i++) {\n    var el = els[i];\n    if (visible(el)) {\n      ret.visible.push(el);\n    } else {\n      ret.hidden.push(el);\n    }\n  }\n\n  return ret;\n};\n\n/**\n * Set transition duration.\n *\n * @api private\n */\n\nSwipe.prototype.transitionDuration = function(ms){\n  var s = this.child.style;\n  s.webkitTransition = ms + 'ms -webkit-transform';\n  s.MozTransition = ms + 'ms -moz-transform';\n  s.msTransition = ms + 'ms -ms-transform';\n  s.OTransition = ms + 'ms -o-transform';\n  s.transition = ms + 'ms transform';\n};\n\n/**\n * Return index of `el` in `els`.\n *\n * @param {Array} els\n * @param {Element} el\n * @return {Number}\n * @api private\n */\n\nfunction indexOf(els, el) {\n  for (var i = 0; i < els.length; i++) {\n    if (els[i] == el) return i;\n  }\n  return -1;\n}\n\n/**\n * Check if `el` is visible.\n *\n * @param {Element} el\n * @return {Boolean}\n * @api private\n */\n\nfunction visible(el) {\n  return style(el).display != 'none';\n}\n//@ sourceURL=jonykrause-swipe/index.js"
-));
-require.register("component-stack/index.js", Function("exports, require, module",
-"\n/**\n * Expose `stack()`.\n */\n\nmodule.exports = stack;\n\n/**\n * Return the stack.\n *\n * @return {Array}\n * @api public\n */\n\nfunction stack() {\n  var orig = Error.prepareStackTrace;\n  Error.prepareStackTrace = function(_, stack){ return stack; };\n  var err = new Error;\n  Error.captureStackTrace(err, arguments.callee);\n  var stack = err.stack;\n  Error.prepareStackTrace = orig;\n  return stack;\n}//@ sourceURL=component-stack/index.js"
-));
-require.register("component-assert/index.js", Function("exports, require, module",
-"\n/**\n * Module dependencies.\n */\n\nvar stack = require('stack');\n\n/**\n * Load contents of `script`.\n *\n * @param {String} script\n * @return {String}\n * @api private\n */\n\nfunction getScript(script) {\n  var xhr = new XMLHttpRequest;\n  xhr.open('GET', script, false);\n  xhr.send(null);\n  return xhr.responseText;\n}\n\n/**\n * Assert `expr` with optional failure `msg`.\n *\n * @param {Mixed} expr\n * @param {String} [msg]\n * @api public\n */\n\nmodule.exports = function(expr, msg){\n  if (expr) return;\n  if (!msg) {\n    if (Error.captureStackTrace) {\n      var callsite = stack()[1];\n      var fn = callsite.fun.toString();\n      var file = callsite.getFileName();\n      var line = callsite.getLineNumber() - 1;\n      var col = callsite.getColumnNumber() - 1;\n      var src = getScript(file);\n      line = src.split('\\n')[line].slice(col);\n      expr = line.match(/assert\\((.*)\\)/)[1].trim();\n      msg = expr;\n    } else {\n      msg = 'assertion failed';\n    }\n  }\n\n  throw new Error(msg);\n};//@ sourceURL=component-assert/index.js"
-));
-require.register("fluid-slider/index.js", Function("exports, require, module",
-"\n/**\n * Module dependencies.\n */\n\nvar swipe = require('swipe');\nvar events = require('events');\n/**\n * Expose `FluidSlider`.\n */\n\nmodule.exports = FluidSlider;\n\n\n/**\n * Turn `el` into a slideable list.\n *\n * @param {Element} el\n * @param {Object} options\n * @api public\n *\n *  * Options:\n *  - `breakpointItems`: {Object} store viewport width/px(key) and amount(val) of visible items f.e. {0: 1, 500: 2}\n *  - `sensitivity`: {Number} Sensitivity while touchmoving\n *  - `itemsToSlide`: {Number} amount of items to slide\n */\n\nfunction FluidSlider(el, options) {\n  if (!(this instanceof FluidSlider)) return new FluidSlider(el, options);\n  if (!el) throw new TypeError('FluidSlider() requires an element');\n  this.el = el;\n  this.parent = this.el.parentNode;\n  this.options = options || {};\n  this.children = this.el.children;\n  this.total = this.children.length;\n  this.swiper = swipe(this.parent).duration(500);\n  this.swiper.sensitivity = this.options.sensitvity || 50;\n  this.breakpointItems = this.options.breakpointItems || { 0: 1 };\n  this.bind();\n  this.update();\n}\n\n/**\n * Bind event handlers.\n *\n * @api public\n */\n\nFluidSlider.prototype.bind = function() {\n  this.winEvents = events(window, this);\n  this.winEvents.bind('resize', 'update');\n};\n\n/**\n * Set amount of visible items according to breakpoints/viewport\n *\n * @param {Object} breakpoints\n *\n * @api private\n */\n\nFluidSlider.prototype.setVisibleItems = function(breakpoints) {\n  var currentWidth = this.parent.offsetWidth;\n  for (breakpoint in breakpoints) {\n    if (currentWidth >= parseInt(breakpoint, 10)) {\n      this.visibleItems = breakpoints[breakpoint];\n    }\n  }\n  this.setitemsToSlide();\n};\n\n/**\n * Set amount of items to slide\n *\n * @api private\n */\n\nFluidSlider.prototype.setitemsToSlide = function() {\n  return this.swiper.itemsToSwipe = this.options.itemsToSlide || Math.ceil(this.visibleItems/2);\n};\n\n/**\n * Set Element/List width according to visible Items\n *\n * @api private\n */\n\nFluidSlider.prototype.setElWidth = function() {\n  var width = this.total * 100 / this.visibleItems;\n  return this.el.style.width = width + '%';\n};\n\n/**\n * Calc item width in percent\n *\n * @api private\n */\n\nFluidSlider.prototype.getItemWidth = function() {\n  var fullWidth = parseInt(this.el.style.width, 10);\n  this.swiper.childWidth = fullWidth / this.total / (fullWidth / 100);\n  return parseFloat(this.swiper.childWidth.toFixed(3));\n};\n\n/**\n * Set item width\n *\n * @api private\n */\n\nFluidSlider.prototype.setItemWidth = function() {\n  var width = this.getItemWidth();\n  for (var i = 0, len = this.total; i < len; i++) {\n    this.children[i].style.width = width + '%';\n  }\n};\n\n/**\n * Update sizing data.\n *\n * @api public\n */\n\nFluidSlider.prototype.update = function() {\n  this.setVisibleItems(this.breakpointItems);\n  this.setElWidth();\n  this.setItemWidth();\n  return this;\n};\n//@ sourceURL=fluid-slider/index.js"
-));
+require.register("component-event/index.js", function(exports, require, module){
+
+/**
+ * Bind `el` event `type` to `fn`.
+ *
+ * @param {Element} el
+ * @param {String} type
+ * @param {Function} fn
+ * @param {Boolean} capture
+ * @return {Function}
+ * @api public
+ */
+
+exports.bind = function(el, type, fn, capture){
+  if (el.addEventListener) {
+    el.addEventListener(type, fn, capture || false);
+  } else {
+    el.attachEvent('on' + type, fn);
+  }
+  return fn;
+};
+
+/**
+ * Unbind `el` event `type`'s callback `fn`.
+ *
+ * @param {Element} el
+ * @param {String} type
+ * @param {Function} fn
+ * @param {Boolean} capture
+ * @return {Function}
+ * @api public
+ */
+
+exports.unbind = function(el, type, fn, capture){
+  if (el.removeEventListener) {
+    el.removeEventListener(type, fn, capture || false);
+  } else {
+    el.detachEvent('on' + type, fn);
+  }
+  return fn;
+};
+
+});
+require.register("component-event-manager/index.js", function(exports, require, module){
+
+
+/**
+ * Expose `EventManager`.
+ */
+
+module.exports = EventManager;
+
+/**
+ * Initialize an `EventManager` with the given
+ * `target` object which events will be bound to,
+ * and the `obj` which will receive method calls.
+ *
+ * @param {Object} target
+ * @param {Object} obj
+ * @api public
+ */
+
+function EventManager(target, obj) {
+  this.target = target;
+  this.obj = obj;
+  this._bindings = {};
+}
+
+/**
+ * Register bind function.
+ *
+ * @param {Function} fn
+ * @return {EventManager} self
+ * @api public
+ */
+
+EventManager.prototype.onbind = function(fn){
+  this._bind = fn;
+  return this;
+};
+
+/**
+ * Register unbind function.
+ *
+ * @param {Function} fn
+ * @return {EventManager} self
+ * @api public
+ */
+
+EventManager.prototype.onunbind = function(fn){
+  this._unbind = fn;
+  return this;
+};
+
+/**
+ * Bind to `event` with optional `method` name.
+ * When `method` is undefined it becomes `event`
+ * with the "on" prefix.
+ *
+ *    events.bind('login') // implies "onlogin"
+ *    events.bind('login', 'onLogin')
+ *
+ * @param {String} event
+ * @param {String} [method]
+ * @return {Function} callback
+ * @api public
+ */
+
+EventManager.prototype.bind = function(event, method){
+  var fn = this.addBinding.apply(this, arguments);
+  if (this._onbind) this._onbind(event, method, fn);
+  this._bind(event, fn);
+  return fn;
+};
+
+/**
+ * Add event binding.
+ *
+ * @param {String} event
+ * @param {String} method
+ * @return {Function} callback
+ * @api private
+ */
+
+EventManager.prototype.addBinding = function(event, method){
+  var obj = this.obj;
+  var method = method || 'on' + event;
+  var args = [].slice.call(arguments, 2);
+
+  // callback
+  function callback() {
+    var a = [].slice.call(arguments).concat(args);
+    obj[method].apply(obj, a);
+  }
+
+  // subscription
+  this._bindings[event] = this._bindings[event] || {};
+  this._bindings[event][method] = callback;
+
+  return callback;
+};
+
+/**
+ * Unbind a single binding, all bindings for `event`,
+ * or all bindings within the manager.
+ *
+ *     evennts.unbind('login', 'onLogin')
+ *     evennts.unbind('login')
+ *     evennts.unbind()
+ *
+ * @param {String} [event]
+ * @param {String} [method]
+ * @return {Function} callback
+ * @api public
+ */
+
+EventManager.prototype.unbind = function(event, method){
+  if (0 == arguments.length) return this.unbindAll();
+  if (1 == arguments.length) return this.unbindAllOf(event);
+  var fn = this._bindings[event][method];
+  if (this._onunbind) this._onunbind(event, method, fn);
+  this._unbind(event, fn);
+  return fn;
+};
+
+/**
+ * Unbind all events.
+ *
+ * @api private
+ */
+
+EventManager.prototype.unbindAll = function(){
+  for (var event in this._bindings) {
+    this.unbindAllOf(event);
+  }
+};
+
+/**
+ * Unbind all events for `event`.
+ *
+ * @param {String} event
+ * @api private
+ */
+
+EventManager.prototype.unbindAllOf = function(event){
+  var bindings = this._bindings[event];
+  if (!bindings) return;
+  for (var method in bindings) {
+    this.unbind(event, method);
+  }
+};
+
+});
+require.register("component-events/index.js", function(exports, require, module){
+
+/**
+ * Module dependencies.
+ */
+
+var Manager = require('event-manager')
+  , event = require('event');
+
+/**
+ * Return a new event manager.
+ */
+
+module.exports = function(target, obj){
+  var manager = new Manager(target, obj);
+
+  manager.onbind(function(name, fn){
+    event.bind(target, name, fn);
+  });
+
+  manager.onunbind(function(name, fn){
+    event.unbind(target, name, fn);
+  });
+
+  return manager;
+};
+
+});
+require.register("component-has-translate3d/index.js", function(exports, require, module){
+
+var prop = require('transform-property');
+// IE8<= doesn't have `getComputedStyle`
+if (!prop || !window.getComputedStyle) return module.exports = false;
+
+var map = {
+  webkitTransform: '-webkit-transform',
+  OTransform: '-o-transform',
+  msTransform: '-ms-transform',
+  MozTransform: '-moz-transform',
+  transform: 'transform'
+};
+
+// from: https://gist.github.com/lorenzopolidori/3794226
+var el = document.createElement('div');
+el.style[prop] = 'translate3d(1px,1px,1px)';
+document.body.insertBefore(el, null);
+var val = getComputedStyle(el).getPropertyValue(map[prop]);
+document.body.removeChild(el);
+module.exports = null != val && val.length && 'none' != val;
+
+});
+require.register("component-transform-property/index.js", function(exports, require, module){
+
+var styles = [
+  'webkitTransform',
+  'MozTransform',
+  'msTransform',
+  'OTransform',
+  'transform'
+];
+
+var el = document.createElement('p');
+var style;
+
+for (var i = 0; i < styles.length; i++) {
+  style = styles[i];
+  if (null != el.style[style]) {
+    module.exports = style;
+    break;
+  }
+}
+
+});
+require.register("jonykrause-translate/index.js", function(exports, require, module){
+
+/**
+ * Module dependencies.
+ */
+
+var transform = require('transform-property');
+var has3d = require('has-translate3d');
+
+/**
+ * Expose `translate`.
+ */
+
+module.exports = translate;
+
+/**
+ * Translate `el` by `(x, y) units`.
+ *
+ * @param {Element} el
+ * @param {Number} x
+ * @param {Number} y
+ * @param {String} unit
+ * @api public
+ */
+
+function translate(el, x, y, unit) {
+  unit || (unit = 'px');
+  if (typeof transform === 'string') {
+    if (has3d) {
+      el.style[transform] = 'translate3d(' + x + unit + ',' + y + unit + ', 0)';
+    } else {
+      el.style[transform] = 'translate(' + x + unit + ',' + y + unit + ')';
+    }
+  } else {
+    el.style.left = x;
+    el.style.top = y;
+  }
+};
+
+
+});
+require.register("component-emitter/index.js", function(exports, require, module){
+
+/**
+ * Expose `Emitter`.
+ */
+
+module.exports = Emitter;
+
+/**
+ * Initialize a new `Emitter`.
+ *
+ * @api public
+ */
+
+function Emitter(obj) {
+  if (obj) return mixin(obj);
+};
+
+/**
+ * Mixin the emitter properties.
+ *
+ * @param {Object} obj
+ * @return {Object}
+ * @api private
+ */
+
+function mixin(obj) {
+  for (var key in Emitter.prototype) {
+    obj[key] = Emitter.prototype[key];
+  }
+  return obj;
+}
+
+/**
+ * Listen on the given `event` with `fn`.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.on = function(event, fn){
+  this._callbacks = this._callbacks || {};
+  (this._callbacks[event] = this._callbacks[event] || [])
+    .push(fn);
+  return this;
+};
+
+/**
+ * Adds an `event` listener that will be invoked a single
+ * time then automatically removed.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.once = function(event, fn){
+  var self = this;
+  this._callbacks = this._callbacks || {};
+
+  function on() {
+    self.off(event, on);
+    fn.apply(this, arguments);
+  }
+
+  fn._off = on;
+  this.on(event, on);
+  return this;
+};
+
+/**
+ * Remove the given callback for `event` or all
+ * registered callbacks.
+ *
+ * @param {String} event
+ * @param {Function} fn
+ * @return {Emitter}
+ * @api public
+ */
+
+Emitter.prototype.off =
+Emitter.prototype.removeListener =
+Emitter.prototype.removeAllListeners = function(event, fn){
+  this._callbacks = this._callbacks || {};
+
+  // all
+  if (0 == arguments.length) {
+    this._callbacks = {};
+    return this;
+  }
+
+  // specific event
+  var callbacks = this._callbacks[event];
+  if (!callbacks) return this;
+
+  // remove all handlers
+  if (1 == arguments.length) {
+    delete this._callbacks[event];
+    return this;
+  }
+
+  // remove specific handler
+  var i = callbacks.indexOf(fn._off || fn);
+  if (~i) callbacks.splice(i, 1);
+  return this;
+};
+
+/**
+ * Emit `event` with the given args.
+ *
+ * @param {String} event
+ * @param {Mixed} ...
+ * @return {Emitter}
+ */
+
+Emitter.prototype.emit = function(event){
+  this._callbacks = this._callbacks || {};
+  var args = [].slice.call(arguments, 1)
+    , callbacks = this._callbacks[event];
+
+  if (callbacks) {
+    callbacks = callbacks.slice(0);
+    for (var i = 0, len = callbacks.length; i < len; ++i) {
+      callbacks[i].apply(this, args);
+    }
+  }
+
+  return this;
+};
+
+/**
+ * Return array of callbacks for `event`.
+ *
+ * @param {String} event
+ * @return {Array}
+ * @api public
+ */
+
+Emitter.prototype.listeners = function(event){
+  this._callbacks = this._callbacks || {};
+  return this._callbacks[event] || [];
+};
+
+/**
+ * Check if this emitter has `event` handlers.
+ *
+ * @param {String} event
+ * @return {Boolean}
+ * @api public
+ */
+
+Emitter.prototype.hasListeners = function(event){
+  return !! this.listeners(event).length;
+};
+
+});
+require.register("jkroso-computed-style/index.js", function(exports, require, module){
+
+/**
+ * Get the computed style of a DOM element
+ * 
+ *   style(document.body) // => {width:'500px', ...}
+ * 
+ * @param {Element} element
+ * @return {Object}
+ */
+
+// Accessing via window for jsDOM support
+module.exports = window.getComputedStyle
+
+// Fallback to elem.currentStyle for IE < 9
+if (!module.exports) {
+	module.exports = function (elem) {
+		return elem.currentStyle
+	}
+}
+
+});
+require.register("jonykrause-swipe/index.js", function(exports, require, module){
+
+/**
+ * Module dependencies.
+ */
+
+var translate = require('translate');
+var style = require('computed-style');
+var Emitter = require('emitter');
+var events = require('events');
+var min = Math.min;
+var max = Math.max;
+
+/**
+ * Expose `Swipe`.
+ */
+
+module.exports = Swipe;
+
+/**
+ * Turn `el` into a swipeable list.
+ *
+ * @param {Element} el
+ * @api public
+ */
+
+function Swipe(el) {
+  if (!(this instanceof Swipe)) return new Swipe(el);
+  if (!el) throw new TypeError('Swipe() requires an element');
+  this.child = el.children[0];
+  this.currentEl = this.children().visible[0];
+  this.visible = this.children().visible.length;
+  this.unit = '%';
+  this.currentVisible = 0;
+  this.itemsToSwipe = 1;
+  this.sensitivity = 1;
+  this.current = 0;
+  this.el = el;
+  this.interval(5000);
+  this.duration(300);
+  this.show(0, 0, { silent: true });
+  this.bind();
+}
+
+/**
+ * Mixin `Emitter`.
+ */
+
+Emitter(Swipe.prototype);
+
+/**
+ * Refresh sizing data.
+ *
+ * @api public
+ */
+
+Swipe.prototype.refresh = function(){
+  var children = this.children();
+  var visible = children.visible.length;
+  var prev = this.visible || visible;
+
+  var i = indexOf(children.visible, this.currentEl);
+
+  // we removed/added item(s), update current
+  if (visible < prev && i <= this.currentVisible && i >= 0) {
+    this.currentVisible -= this.currentVisible - i;
+  } else if (visible > prev && i > this.currentVisible) {
+    this.currentVisible += i - this.currentVisible;
+  }
+
+  this.visible = visible;
+  this.childWidth = this.el.getBoundingClientRect().width;
+  this.width = Math.ceil(this.childWidth * visible);
+  this.child.style.width = this.width + 'px';
+  this.child.style.height = this.height + 'px';
+  this.show(this.currentVisible, 0, { silent: true });
+};
+
+/**
+ * Bind event handlers.
+ *
+ * @api public
+ */
+
+Swipe.prototype.bind = function(){
+  this.events = events(this.child, this);
+  this.events.bind('mousedown', 'ontouchstart');
+  this.events.bind('mousemove', 'ontouchmove');
+  this.events.bind('touchstart');
+  this.events.bind('touchmove');
+
+  this.docEvents = events(document, this);
+  this.docEvents.bind('mouseup', 'ontouchend');
+  this.docEvents.bind('touchend');
+};
+
+/**
+ * Unbind event handlers.
+ *
+ * @api public
+ */
+
+Swipe.prototype.unbind = function(){
+  this.events.unbind();
+  this.docEvents.unbind();
+};
+
+/**
+ * Handle touchstart.
+ *
+ * @api private
+ */
+
+Swipe.prototype.ontouchstart = function(e){
+  e.preventDefault();
+  e.stopPropagation();  
+  if (e.touches) e = e.touches[0];
+
+  this.transitionDuration(0);
+  this.dx = 0;
+  this.lock = false;
+  this.ignore = false;
+
+  this.down = {
+    x: e.pageX,
+    y: e.pageY,
+    at: new Date
+  };
+};
+
+/**
+ * Handle touchmove.
+ *
+ * For the first and last slides
+ * we apply some resistence to help
+ * indicate that you're at the edges.
+ *
+ * @api private
+ */
+
+Swipe.prototype.ontouchmove = function(e){
+  if (!this.down || this.ignore) return;
+  if (e.touches && e.touches.length > 1) return;
+  if (e.touches) {
+    var ev = e;
+    e = e.touches[0];
+  }
+  var s = this.down;
+  var x = e.pageX;
+  var w = this.childWidth;
+  var i = this.currentVisible;
+  this.dx = x - s.x;
+
+  // determine dy and the slope
+  if (!this.lock) {
+    this.lock = true;
+    var y = e.pageY;
+    var dy = y - s.y;
+    var slope = dy / this.dx;
+
+    // if is greater than 1 or -1, we're swiping up/down
+    if (slope > 1 || slope < -1) {
+      this.ignore = true;
+      return;
+    }
+  }
+
+  // when we overwrite touch event with e.touches[0], it doesn't
+  // have the preventDefault method. e.preventDefault() prevents
+  // multiaxis scrolling when moving from left to right
+  (ev || e).preventDefault();
+
+  var dir = this.dx < 0 ? 1 : 0;
+  if (this.isFirst() && 0 == dir) this.dx /= 2;
+  if (this.isLast() && 1 == dir) this.dx /= 2;
+  translate(this.child, -((i * w) + -this.dx / this.sensitivity), 0, this.unit);
+};
+
+/**
+ * Handle touchend.
+ *
+ * @api private
+ */
+
+Swipe.prototype.ontouchend = function(e){
+  if (!this.down) return;
+  e.stopPropagation();
+
+  // touches
+  if (e.changedTouches) e = e.changedTouches[0];
+
+  // setup
+  var dx = this.dx;
+  var x = e.pageX;
+  var w = this.childWidth;
+
+  // < 200ms swipe
+  var ms = new Date - this.down.at;
+  var threshold = ms < 200 ? w / 10 : w / 2;
+  var dir = dx < 0 ? 1 : 0;
+  var half = Math.abs(dx) >= threshold;
+
+  // clear
+  this.down = null;
+
+  // first -> next
+  if (this.isFirst() && 1 == dir && half) return this.next();
+
+  // first -> first
+  if (this.isFirst()) return this.prev();
+
+  // last -> last
+  if (this.isLast() && 1 == dir) return this.next();
+
+  // N -> N + 1
+  if (1 == dir && half) return this.next();
+
+  // N -> N - 1
+  if (0 == dir && half) return this.prev();
+
+  // N -> N
+  this.show(this.currentVisible);
+};
+
+/**
+ * Set transition duration to `ms`.
+ *
+ * @param {Number} ms
+ * @return {Swipe} self
+ * @api public
+ */
+
+Swipe.prototype.duration = function(ms){
+  this._duration = ms;
+  return this;
+};
+
+/**
+ * Set cycle interval to `ms`.
+ *
+ * @param {Number} ms
+ * @return {Swipe} self
+ * @api public
+ */
+
+Swipe.prototype.interval = function(ms){
+  this._interval = ms;
+  return this;
+};
+
+/**
+ * Play through all the elements.
+ *
+ * @return {Swipe} self
+ * @api public
+ */
+
+Swipe.prototype.play = function(){
+  if (this.timer) return;
+  this.timer = setInterval(this.cycle.bind(this), this._interval);
+  return this;
+};
+
+/**
+ * Stop playing.
+ *
+ * @return {Swipe} self
+ * @api public
+ */
+
+Swipe.prototype.stop = function(){
+  clearInterval(this.timer);
+  this.timer = null;
+  return this;
+};
+
+/**
+ * Show the next slide, when the end
+ * is reached start from the beginning.
+ *
+ * @api public
+ */
+
+Swipe.prototype.cycle = function(){
+  if (this.isLast()) {
+    this.currentVisible = -this.itemsToSwipe;
+    this.next();
+  } else {
+    this.next();
+  }
+};
+
+/**
+ * Check if we're on the first visible slide.
+ *
+ * @return {Boolean}
+ * @api public
+ */
+
+Swipe.prototype.isFirst = function(){
+  return this.currentVisible == 0;
+};
+
+/**
+ * Check if we're on the last visible slide.
+ *
+ * @return {Boolean}
+ * @api public
+ */
+
+Swipe.prototype.isLast = function(){
+  return this.currentVisible == this.visible - this.itemsToSwipe;
+};
+
+/**
+ * Show the previous slide, if any.
+ *
+ * @return {Swipe} self
+ * @api public
+ */
+
+Swipe.prototype.prev = function(){
+  this.show(this.currentVisible - this.itemsToSwipe);
+  return this;
+};
+
+/**
+ * Show the next slide, if any.
+ *
+ * @return {Swipe} self
+ * @api public
+ */
+
+Swipe.prototype.next = function(){
+  this.show(this.currentVisible + this.itemsToSwipe);
+  return this;
+};
+
+/**
+ * Show slide `i`.
+ *
+ * Emits `show `event
+ *
+ * @param {Number} i
+ * @return {Swipe} self
+ * @api public
+ */
+
+Swipe.prototype.show = function(i, ms, options){
+  options = options || {};
+  if (null == ms) ms = this._duration;
+  var children = this.children();
+  i = max(0, min(i, children.visible.length - 1));
+  this.currentVisible = i;
+  this.currentEl = children.visible[i];
+  this.current = indexOf(children.all, this.currentEl);
+  this.transitionDuration(ms);
+  translate(this.child, -this.childWidth * i, 0, this.unit);
+  if (!options.silent) this.emit('show', this.current, this.currentEl);
+  return this;
+};
+
+/**
+ * Return children categorized by visibility.
+ *
+ * @return {Object}
+ * @api private
+ */
+
+Swipe.prototype.children = function(){
+  var els = this.child.children;
+
+  var ret = {
+    all: els,
+    visible: [],
+    hidden: []
+  };
+
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    if (visible(el)) {
+      ret.visible.push(el);
+    } else {
+      ret.hidden.push(el);
+    }
+  }
+
+  return ret;
+};
+
+/**
+ * Set transition duration.
+ *
+ * @api private
+ */
+
+Swipe.prototype.transitionDuration = function(ms){
+  var s = this.child.style;
+  s.webkitTransition = ms + 'ms -webkit-transform';
+  s.MozTransition = ms + 'ms -moz-transform';
+  s.msTransition = ms + 'ms -ms-transform';
+  s.OTransition = ms + 'ms -o-transform';
+  s.transition = ms + 'ms transform';
+};
+
+/**
+ * Return index of `el` in `els`.
+ *
+ * @param {Array} els
+ * @param {Element} el
+ * @return {Number}
+ * @api private
+ */
+
+function indexOf(els, el) {
+  for (var i = 0; i < els.length; i++) {
+    if (els[i] == el) return i;
+  }
+  return -1;
+}
+
+/**
+ * Check if `el` is visible.
+ *
+ * @param {Element} el
+ * @return {Boolean}
+ * @api private
+ */
+
+function visible(el) {
+  return style(el).display != 'none';
+}
+
+});
+require.register("component-stack/index.js", function(exports, require, module){
+
+/**
+ * Expose `stack()`.
+ */
+
+module.exports = stack;
+
+/**
+ * Return the stack.
+ *
+ * @return {Array}
+ * @api public
+ */
+
+function stack() {
+  var orig = Error.prepareStackTrace;
+  Error.prepareStackTrace = function(_, stack){ return stack; };
+  var err = new Error;
+  Error.captureStackTrace(err, arguments.callee);
+  var stack = err.stack;
+  Error.prepareStackTrace = orig;
+  return stack;
+}
+});
+require.register("component-assert/index.js", function(exports, require, module){
+
+/**
+ * Module dependencies.
+ */
+
+var stack = require('stack');
+
+/**
+ * Load contents of `script`.
+ *
+ * @param {String} script
+ * @return {String}
+ * @api private
+ */
+
+function getScript(script) {
+  var xhr = new XMLHttpRequest;
+  xhr.open('GET', script, false);
+  xhr.send(null);
+  return xhr.responseText;
+}
+
+/**
+ * Assert `expr` with optional failure `msg`.
+ *
+ * @param {Mixed} expr
+ * @param {String} [msg]
+ * @api public
+ */
+
+module.exports = function(expr, msg){
+  if (expr) return;
+  if (!msg) {
+    if (Error.captureStackTrace) {
+      var callsite = stack()[1];
+      var fn = callsite.fun.toString();
+      var file = callsite.getFileName();
+      var line = callsite.getLineNumber() - 1;
+      var col = callsite.getColumnNumber() - 1;
+      var src = getScript(file);
+      line = src.split('\n')[line].slice(col);
+      expr = line.match(/assert\((.*)\)/)[1].trim();
+      msg = expr;
+    } else {
+      msg = 'assertion failed';
+    }
+  }
+
+  throw new Error(msg);
+};
+});
+require.register("fluid-slider/index.js", function(exports, require, module){
+
+/**
+ * Module dependencies.
+ */
+
+var swipe = require('swipe');
+var events = require('events');
+/**
+ * Expose `FluidSlider`.
+ */
+
+module.exports = FluidSlider;
+
+
+/**
+ * Turn `el` into a slideable list.
+ *
+ * @param {Element} el
+ * @param {Object} options
+ * @api public
+ *
+ *  * Options:
+ *  - `breakpointItems`: {Object} store viewport width/px(key) and amount(val) of visible items f.e. {0: 1, 500: 2}
+ *  - `sensitivity`: {Number} Sensitivity while touchmoving
+ *  - `itemsToSlide`: {Number} amount of items to slide
+ */
+
+function FluidSlider(el, options) {
+  if (!(this instanceof FluidSlider)) return new FluidSlider(el, options);
+  if (!el) throw new TypeError('FluidSlider() requires an element');
+  this.el = el;
+  this.parent = this.el.parentNode;
+  this.options = options || {};
+  this.children = this.el.children;
+  this.total = this.children.length;
+  this.swiper = swipe(this.parent).duration(500);
+  this.swiper.sensitivity = this.options.sensitvity || 50;
+  this.breakpointItems = this.options.breakpointItems || { 0: 1 };
+  this.bind();
+  this.update();
+}
+
+/**
+ * Bind event handlers.
+ *
+ * @api public
+ */
+
+FluidSlider.prototype.bind = function() {
+  this.winEvents = events(window, this);
+  this.winEvents.bind('resize', 'update');
+};
+
+/**
+ * Set amount of visible items according to breakpoints/viewport
+ *
+ * @param {Object} breakpoints
+ *
+ * @api private
+ */
+
+FluidSlider.prototype.setVisibleItems = function(breakpoints) {
+  var currentWidth = this.parent.offsetWidth;
+  for (breakpoint in breakpoints) {
+    if (currentWidth >= parseInt(breakpoint, 10)) {
+      this.visibleItems = breakpoints[breakpoint];
+    }
+  }
+  this.setitemsToSlide();
+};
+
+/**
+ * Set amount of items to slide
+ *
+ * @api private
+ */
+
+FluidSlider.prototype.setitemsToSlide = function() {
+  return this.swiper.itemsToSwipe = this.options.itemsToSlide || Math.ceil(this.visibleItems/2);
+};
+
+/**
+ * Set Element/List width according to visible Items
+ *
+ * @api private
+ */
+
+FluidSlider.prototype.setElWidth = function() {
+  var width = this.total * 100 / this.visibleItems;
+  return this.el.style.width = width + '%';
+};
+
+/**
+ * Calc item width in percent
+ *
+ * @api private
+ */
+
+FluidSlider.prototype.getItemWidth = function() {
+  var fullWidth = parseInt(this.el.style.width, 10);
+  this.swiper.childWidth = fullWidth / this.total / (fullWidth / 100);
+  return parseFloat(this.swiper.childWidth.toFixed(3));
+};
+
+/**
+ * Set item width
+ *
+ * @api private
+ */
+
+FluidSlider.prototype.setItemWidth = function() {
+  var width = this.getItemWidth();
+  for (var i = 0, len = this.total; i < len; i++) {
+    this.children[i].style.width = width + '%';
+  }
+};
+
+/**
+ * Update sizing data.
+ *
+ * @api public
+ */
+
+FluidSlider.prototype.update = function() {
+  this.setVisibleItems(this.breakpointItems);
+  this.setElWidth();
+  this.setItemWidth();
+  return this;
+};
+
+});
 require.alias("component-events/index.js", "fluid-slider/deps/events/index.js");
 require.alias("component-events/index.js", "events/index.js");
 require.alias("component-event/index.js", "component-events/deps/event/index.js");

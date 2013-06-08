@@ -1,9 +1,9 @@
 
 build: components index.js fluid-slider.css
-	@component build --dev
+	@component build
 
 components: component.json
-	@component install --dev
+	@component install
 
 clean:
 	rm -fr build components template.js
