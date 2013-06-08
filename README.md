@@ -1,7 +1,7 @@
 
 # Fluid Slider
 
-Percentage-based Slider component built on top of [Swipe](https://github.com/component/swipe). Useful for responsive projects because of configurable breakpoints/slides. Be sure to check out the [example](http://jonykrause.github.io/fluid-slider/).
+Percentage-based Slider component built on top of [Swipe](https://github.com/component/swipe). Useful for responsive projects because of configurable breakpoints/slides. Be sure to check out the [demo](http://jonykrause.github.io/fluid-slider/).
 
 
 ## Installation
