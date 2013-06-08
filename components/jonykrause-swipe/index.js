@@ -28,6 +28,8 @@ function Swipe(el) {
   if (!el) throw new TypeError('Swipe() requires an element');
   this.child = el.children[0];
   this.currentEl = this.children().visible[0];
+  this.visible = this.children().visible.length;
+  this.unit = '%';
   this.currentVisible = 0;
   this.itemsToSwipe = 1;
   this.sensitivity = 1;
@@ -170,7 +172,7 @@ Swipe.prototype.ontouchmove = function(e){
   var dir = this.dx < 0 ? 1 : 0;
   if (this.isFirst() && 0 == dir) this.dx /= 2;
   if (this.isLast() && 1 == dir) this.dx /= 2;
-  translate(this.child, -((i * w) + -this.dx / this.sensitivity), 0, '%');
+  translate(this.child, -((i * w) + -this.dx / this.sensitivity), 0, this.unit);
 };
 
 /**
@@ -280,7 +282,7 @@ Swipe.prototype.stop = function(){
 
 Swipe.prototype.cycle = function(){
   if (this.isLast()) {
-    this.currentVisible = -1;
+    this.currentVisible = -this.itemsToSwipe;
     this.next();
   } else {
     this.next();
@@ -352,7 +354,7 @@ Swipe.prototype.show = function(i, ms, options){
   this.currentEl = children.visible[i];
   this.current = indexOf(children.all, this.currentEl);
   this.transitionDuration(ms);
-  translate(this.child, -this.childWidth * i, 0, '%');
+  translate(this.child, -this.childWidth * i, 0, this.unit);
   if (!options.silent) this.emit('show', this.current, this.currentEl);
   return this;
 };
