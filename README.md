@@ -1,7 +1,7 @@
 
 # Fluid Slider
 
-Percentage-based Slider component built on top of [Swipe](https://github.com/component/swipe). Useful for rwd projects because of configurable breakpoints/slides.
+Percentage-based Slider component built on top of [Swipe](https://github.com/component/swipe). Useful for responsive projects because of configurable breakpoints/slides. Be sure to check out the [example](http://jonykrause.github.io/fluid-slider/).
 
 
 ## Installation
@@ -27,7 +27,7 @@ Supports the options:
 This method should be invoked when the swipe element has been resized, or an item has been added or removed
 
 
-#### Also inherits all of the [Swipe](https://github.com/component/swipe) functionality!
+#### Also inherits [Swipe](https://github.com/component/swipe) functionality!
 
 ## License
 
