@@ -9,7 +9,9 @@
     "jonykrause/translate": "flexible-unit",
     "jonykrause/swipe": "translate/swipe-items"
   },
-  "development": {},
+  "development": {
+    "component/assert": "*"
+  },
   "license": "MIT",
   "main": "index.js",
   "scripts": [

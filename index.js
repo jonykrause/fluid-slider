@@ -33,7 +33,7 @@ function FluidSlider(el, options) {
   this.options = options || {};
   this.children = this.el.children;
   this.total = this.children.length;
-  this.swiper = swipe(el.parentNode).duration(500);
+  this.swiper = swipe(this.parent).duration(500);
   this.swiper.sensitivity = this.options.sensitvity || 50;
   this.breakpointItems = this.options.breakpointItems || { 0: 1 };
   this.bind();

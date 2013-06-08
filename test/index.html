@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width">
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        padding: 5px;
+        font: 14px "Helvetica Neue", Helvetica, Arial;
+      }
+      #container {
+        width: 295px;
+        height: 380px;
+        overflow: hidden;
+      }
+      ul {
+        margin: 0;
+        padding: 0;
+        height: 380px;
+      }
+      ul li {
+        display: table-cell;
+        background: #f8f8f8;
+        color: #888;
+        width: 300px;
+        height: 380px;
+        list-style: none;
+        margin: 0;
+        padding: 50px;
+        -webkit-user-select: none;
+        border: 1px solid #ddd;
+        border-radius: 2px;
+      }
+      button {
+        margin: 5px 0;
+        border: 1px solid #ddd;
+        padding: 5px 10px;
+        background: #eee;
+        border-radius: 2px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #fff;
+      }
+
+      .reader {
+        height: 100%;
+        width: 100%;
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <ul id="slider">
+        <li>
+          <div class="reader">
+            <h1>One</h1>
+            <p>This is the first example page. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin id mauris arcu. Ut vestibulum, neque sit amet lacinia dictum, nibh neque commodo orci, at tincidunt neque turpis a nulla. Donec sit amet imperdiet eros.swiper. Etiam et eros in lacus convallis pretium. Integer sit amet aliquam ligula. Ut id lorem elit, ut commodo nulla. Suspendisse id tortor nec sem commodo tincidunt. Curabitur ligula sem, gravida id adipiscing non, consequat sit amet neque. Sed hendrerit varius consequat. Etiam vel purus at est pretium commodo. Proin convallis tempor fringilla. Pellentesque non quam vitae ipsum aliquet auctor. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Nam non mauris ipsum. Nunc vitae ipsum quis augue sagittis accumsan.</p>
+          </div>
+        </li>
+
+        <li>
+          <h1>Two</h1>
+          <p>This is the second example page.</p>
+
+        </li>
+
+        <li>
+          <h1>Three</h1>
+          <p>This is the third example page.</p>
+        </li>
+
+        <li>
+          <h1>Four</h1>
+          <p>This is the fourth example page.</p>
+        </li>
+      </ul>
+    </div>
+
+    <script src="../build/build.js"></script>
+    <script>
+      var assert = require('assert');
+      var slider = require('fluid-slider');
+      var el = document.getElementById('slider');
+      var s = slider(el);
+
+      function nth(n) {
+        return el.querySelector('li:nth-child(' + n + ')');
+      }
+
+      // .next() / .prev()
+
+      assert(0 == s.swiper.current)
+      assert(nth(1) == s.swiper.currentEl)
+      assert(s.swiper.isFirst())
+
+      s.swiper.next()
+      assert(1 == s.swiper.current)
+      assert(nth(2) == s.swiper.currentEl)
+
+      s.swiper.prev()
+      assert(0 == s.swiper.current)
+      assert(nth(1) == s.swiper.currentEl)
+
+      s.swiper.next()
+      assert(1 == s.swiper.current)
+      assert(nth(2) == s.swiper.currentEl)
+
+      s.swiper.next()
+      assert(2 == s.swiper.current)
+      assert(nth(3) == s.swiper.currentEl)
+
+      s.swiper.next()
+      assert(3 == s.swiper.current)
+      assert(nth(4) == s.swiper.currentEl)
+      assert(s.swiper.isLast())
+
+      s.swiper.next()
+      assert(3 == s.swiper.current)
+      assert(nth(4) == s.swiper.currentEl)
+      assert(s.swiper.isLast())
+
+      // .show()
+
+      s.swiper.show(0)
+      assert(0 == s.swiper.current)
+      assert(nth(1) == s.swiper.currentEl)
+
+      // out of bounds
+
+      s.swiper.show(-5)
+      assert(0 == s.swiper.current)
+
+      s.swiper.show(15)
+      assert(3 == s.swiper.current)
+
+      // cycling
+
+      s.swiper.show(0);
+
+      s.swiper.cycle();
+      assert(1 == s.swiper.current)
+      s.swiper.cycle();
+      assert(2 == s.swiper.current)
+      s.swiper.cycle();
+      assert(3 == s.swiper.current)
+      s.swiper.cycle();
+      assert(0 == s.swiper.current)
+      s.swiper.cycle();
+      assert(1 == s.swiper.current)
+
+      // display: none
+
+      nth(1).style.display = 'none' // 0
+      nth(3).style.display = 'none' // 2
+      s.swiper.refresh()
+
+      s.swiper.show(0)
+      assert(1 == s.swiper.current)
+      assert(nth(2) == s.swiper.currentEl)
+
+      s.swiper.show(3)
+      assert(s.swiper.isLast())
+
+      // out of bounds with display: none
+
+      s.swiper.show(-5)
+      assert(1 == s.swiper.current)
+
+      s.swiper.show(15)
+      assert(3 == s.swiper.current)
+
+      // cycling with hidden
+
+      s.swiper.show(0);
+
+      s.swiper.cycle();
+      assert(3 == s.swiper.current)
+      s.swiper.cycle();
+      assert(1 == s.swiper.current)
+      s.swiper.cycle();
+      assert(3 == s.swiper.current)
+
+      // removal
+
+      // addition
+    </script>
+  </body>
+</html>
