@@ -214,7 +214,7 @@ require.register("component-event/index.js", function(exports, require, module){
 
 exports.bind = function(el, type, fn, capture){
   if (el.addEventListener) {
-    el.addEventListener(type, fn, capture);
+    el.addEventListener(type, fn, capture || false);
   } else {
     el.attachEvent('on' + type, fn);
   }
@@ -234,7 +234,7 @@ exports.bind = function(el, type, fn, capture){
 
 exports.unbind = function(el, type, fn, capture){
   if (el.removeEventListener) {
-    el.removeEventListener(type, fn, capture);
+    el.removeEventListener(type, fn, capture || false);
   } else {
     el.detachEvent('on' + type, fn);
   }
@@ -838,8 +838,7 @@ Swipe.prototype.unbind = function(){
  */
 
 Swipe.prototype.ontouchstart = function(e){
-  e.stopPropagation();  
-  this.el.classList.add('touchmoving');  
+  e.stopPropagation();    
   if (e.touches) e = e.touches[0];
 
   this.transitionDuration(0);
@@ -867,6 +866,7 @@ Swipe.prototype.ontouchstart = function(e){
 Swipe.prototype.ontouchmove = function(e){
   if (!this.down || this.ignore) return;
   if (e.touches && e.touches.length > 1) return;
+  this.el.classList.add('touchmoving');
   if (e.touches) {
     var ev = e;
     e = e.touches[0];
