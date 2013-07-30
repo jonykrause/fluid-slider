@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "keywords": [],
   "dependencies": {
-    "component/events": "1.0.2",
+    "component/events": "*",
     "jonykrause/translate": "flexible-unit",
     "jonykrause/swipe": "translate/swipe-items"
   },
