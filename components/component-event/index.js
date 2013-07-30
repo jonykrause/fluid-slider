@@ -12,7 +12,7 @@
 
 exports.bind = function(el, type, fn, capture){
   if (el.addEventListener) {
-    el.addEventListener(type, fn, capture || false);
+    el.addEventListener(type, fn, capture);
   } else {
     el.attachEvent('on' + type, fn);
   }
@@ -32,7 +32,7 @@ exports.bind = function(el, type, fn, capture){
 
 exports.unbind = function(el, type, fn, capture){
   if (el.removeEventListener) {
-    el.removeEventListener(type, fn, capture || false);
+    el.removeEventListener(type, fn, capture);
   } else {
     el.detachEvent('on' + type, fn);
   }

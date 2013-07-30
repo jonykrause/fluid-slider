@@ -2,7 +2,7 @@
   "name": "swipe",
   "repo": "component/swipe",
   "description": "Swipe component with touch support",
-  "version": "1.5.2",
+  "version": "1.7.0",
   "keywords": [
     "carousel",
     "slide",
@@ -13,6 +13,7 @@
   ],
   "dependencies": {
     "component/emitter": "1.0.0",
+    "component/event": "0.1.0",
     "component/events": "1.0.2",
     "jonykrause/translate": "flexible-unit",
     "jkroso/computed-style": "0.1.0"
