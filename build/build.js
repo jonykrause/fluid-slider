@@ -214,7 +214,7 @@ require.register("component-event/index.js", function(exports, require, module){
 
 exports.bind = function(el, type, fn, capture){
   if (el.addEventListener) {
-    el.addEventListener(type, fn, capture || false);
+    el.addEventListener(type, fn, capture);
   } else {
     el.attachEvent('on' + type, fn);
   }
@@ -234,7 +234,7 @@ exports.bind = function(el, type, fn, capture){
 
 exports.unbind = function(el, type, fn, capture){
   if (el.removeEventListener) {
-    el.removeEventListener(type, fn, capture || false);
+    el.removeEventListener(type, fn, capture);
   } else {
     el.detachEvent('on' + type, fn);
   }
@@ -303,27 +303,11 @@ EventManager.prototype.onunbind = function(fn){
  *
  * @param {String} event
  * @param {String} [method]
- * @return {Function} callback
+ * @return {EventManager}
  * @api public
  */
 
 EventManager.prototype.bind = function(event, method){
-  var fn = this.addBinding.apply(this, arguments);
-  if (this._onbind) this._onbind(event, method, fn);
-  this._bind(event, fn);
-  return fn;
-};
-
-/**
- * Add event binding.
- *
- * @param {String} event
- * @param {String} method
- * @return {Function} callback
- * @api private
- */
-
-EventManager.prototype.addBinding = function(event, method){
   var obj = this.obj;
   var method = method || 'on' + event;
   var args = [].slice.call(arguments, 2);
@@ -338,7 +322,10 @@ EventManager.prototype.addBinding = function(event, method){
   this._bindings[event] = this._bindings[event] || {};
   this._bindings[event][method] = callback;
 
-  return callback;
+  // bind
+  this._bind(event, callback);
+
+  return this;
 };
 
 /**
@@ -351,7 +338,6 @@ EventManager.prototype.addBinding = function(event, method){
  *
  * @param {String} [event]
  * @param {String} [method]
- * @return {Function} callback
  * @api public
  */
 
@@ -359,9 +345,7 @@ EventManager.prototype.unbind = function(event, method){
   if (0 == arguments.length) return this.unbindAll();
   if (1 == arguments.length) return this.unbindAllOf(event);
   var fn = this._bindings[event][method];
-  if (this._onunbind) this._onunbind(event, method, fn);
   this._unbind(event, fn);
-  return fn;
 };
 
 /**
@@ -681,9 +665,9 @@ module.exports = window.getComputedStyle
 
 // Fallback to elem.currentStyle for IE < 9
 if (!module.exports) {
-	module.exports = function (elem) {
-		return elem.currentStyle
-	}
+  module.exports = function (elem) {
+    return elem.currentStyle
+  }
 }
 
 });
@@ -727,6 +711,8 @@ function Swipe(el) {
   this.el = el;
   this.interval(5000);
   this.duration(300);
+  this.fastThreshold(200);
+  this.threshold(.5);
   this.show(0, 0, { silent: true });
   this.bind();
 }
@@ -736,6 +722,41 @@ function Swipe(el) {
  */
 
 Emitter(Swipe.prototype);
+
+/**
+ * Set the swipe threshold to `n`.
+ *
+ * This is the factor required for swipe
+ * to detect when a slide has passed the
+ * given threshold, and may display the next
+ * or previous slide. For example the default
+ * of `.5` means that the user must swipe _beyond_
+ * half of the side width.
+ *
+ * @param {Number} n
+ * @api public
+ */
+
+Swipe.prototype.threshold = function(n){
+  this._threshold = n;
+};
+
+/**
+ * Set the "fast" swipe threshold to `ms`.
+ *
+ * This is the amount of time in milliseconds
+ * which determines if a swipe was "fast" or not. When
+ * the swipe's duration is less than `ms` only 1/10th of
+ * the slide's width must be exceeded to display the previous
+ * or next slide.
+ *
+ * @param {Number} n
+ * @api public
+ */
+
+Swipe.prototype.fastThreshold = function(ms){
+  this._fastThreshold = ms;
+};
 
 /**
  * Refresh sizing data.
@@ -885,7 +906,7 @@ Swipe.prototype.ontouchend = function(e){
 
   // < 200ms swipe
   var ms = new Date - this.down.at;
-  var threshold = ms < 200 ? w / 10 : w / 2;
+  var threshold = ms < this._fastThreshold ? w / 10 : w * this._threshold;
   var dir = dx < 0 ? 1 : 0;
   var half = Math.abs(dx) >= threshold;
 
@@ -1038,6 +1059,7 @@ Swipe.prototype.next = function(){
 Swipe.prototype.show = function(i, ms, options){
   options = options || {};
   if (null == ms) ms = this._duration;
+  var self = this;
   var children = this.children();
   i = max(0, min(i, children.visible.length - 1));
   this.currentVisible = i;
@@ -1120,83 +1142,6 @@ function visible(el) {
   return style(el).display != 'none';
 }
 
-});
-require.register("component-stack/index.js", function(exports, require, module){
-
-/**
- * Expose `stack()`.
- */
-
-module.exports = stack;
-
-/**
- * Return the stack.
- *
- * @return {Array}
- * @api public
- */
-
-function stack() {
-  var orig = Error.prepareStackTrace;
-  Error.prepareStackTrace = function(_, stack){ return stack; };
-  var err = new Error;
-  Error.captureStackTrace(err, arguments.callee);
-  var stack = err.stack;
-  Error.prepareStackTrace = orig;
-  return stack;
-}
-});
-require.register("component-assert/index.js", function(exports, require, module){
-
-/**
- * Module dependencies.
- */
-
-var stack = require('stack');
-
-/**
- * Load contents of `script`.
- *
- * @param {String} script
- * @return {String}
- * @api private
- */
-
-function getScript(script) {
-  var xhr = new XMLHttpRequest;
-  xhr.open('GET', script, false);
-  xhr.send(null);
-  return xhr.responseText;
-}
-
-/**
- * Assert `expr` with optional failure `msg`.
- *
- * @param {Mixed} expr
- * @param {String} [msg]
- * @api public
- */
-
-module.exports = function(expr, msg){
-  if (expr) return;
-  if (!msg) {
-    if (Error.captureStackTrace) {
-      var callsite = stack()[1];
-      var fn = callsite.fun.toString();
-      var file = callsite.getFileName();
-      var line = callsite.getLineNumber() - 1;
-      var col = callsite.getColumnNumber() - 1;
-      var src = getScript(file);
-      line = src.split('\n')[line].slice(col);
-      expr = line.match(/assert\((.*)\)/)[1].trim();
-      msg = expr;
-    } else {
-      msg = 'assertion failed';
-    }
-  }
-
-  throw new Error(msg);
-};
 });
 require.register("fluid-slider/index.js", function(exports, require, module){
 
@@ -1329,6 +1274,7 @@ FluidSlider.prototype.update = function() {
   return this;
 };
 
+
 });
 require.alias("component-events/index.js", "fluid-slider/deps/events/index.js");
 require.alias("component-events/index.js", "events/index.js");
@@ -1365,10 +1311,6 @@ require.alias("component-transform-property/index.js", "jonykrause-translate/dep
 require.alias("jonykrause-translate/index.js", "jonykrause-translate/index.js");
 
 require.alias("jkroso-computed-style/index.js", "jonykrause-swipe/deps/computed-style/index.js");
-
-require.alias("component-assert/index.js", "fluid-slider/deps/assert/index.js");
-require.alias("component-assert/index.js", "assert/index.js");
-require.alias("component-stack/index.js", "component-assert/deps/stack/index.js");
 
 require.alias("fluid-slider/index.js", "fluid-slider/index.js");
 
