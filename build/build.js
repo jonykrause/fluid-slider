@@ -214,7 +214,7 @@ require.register("component-event/index.js", function(exports, require, module){
 
 exports.bind = function(el, type, fn, capture){
   if (el.addEventListener) {
-    el.addEventListener(type, fn, capture || false);
+    el.addEventListener(type, fn, capture);
   } else {
     el.attachEvent('on' + type, fn);
   }
@@ -234,7 +234,7 @@ exports.bind = function(el, type, fn, capture){
 
 exports.unbind = function(el, type, fn, capture){
   if (el.removeEventListener) {
-    el.removeEventListener(type, fn, capture || false);
+    el.removeEventListener(type, fn, capture);
   } else {
     el.detachEvent('on' + type, fn);
   }
@@ -1078,7 +1078,7 @@ Swipe.prototype.show = function(i, ms, options){
   if (null == ms) ms = this._duration;
   var self = this;
   var children = this.children();
-  i = max(0, min(i, children.visible.length - 1));
+  i = max(0, min(i, children.visible.length - this.itemsToSwipe));
   this.currentVisible = i;
   this.currentEl = children.visible[i];
   this.current = indexOf(children.all, this.currentEl);
@@ -1186,7 +1186,6 @@ function stack() {
 }
 });
 require.register("component-assert/index.js", function(exports, require, module){
-
 /**
  * Module dependencies.
  */
@@ -1221,7 +1220,7 @@ module.exports = function(expr, msg){
   if (!msg) {
     if (Error.captureStackTrace) {
       var callsite = stack()[1];
-      var fn = callsite.fun.toString();
+      var fn = callsite.getFunctionName();
       var file = callsite.getFileName();
       var line = callsite.getLineNumber() - 1;
       var col = callsite.getColumnNumber() - 1;
@@ -1236,6 +1235,7 @@ module.exports = function(expr, msg){
 
   throw new Error(msg);
 };
+
 });
 require.register("fluid-slider/index.js", function(exports, require, module){
 
@@ -1262,7 +1262,7 @@ module.exports = FluidSlider;
  *  * Options:
  *  - `breakpointItems`: {Object} store viewport width/px(key) and amount(val) of visible items f.e. {0: 1, 500: 2}
  *  - `sensitivity`: {Number} Sensitivity while touchmoving
- *  - `itemsToSlide`: {Number} amount of items to slide
+ *  - `itemsToSlide`: {Number} amount of items to slide, defaults to visible items
  */
 
 function FluidSlider(el, options) {
@@ -1316,7 +1316,7 @@ FluidSlider.prototype.setVisibleItems = function(breakpoints) {
  */
 
 FluidSlider.prototype.setitemsToSlide = function() {
-  return this.swiper.itemsToSwipe = this.options.itemsToSlide || Math.ceil(this.visibleItems/2);
+  return this.swiper.itemsToSwipe = this.options.itemsToSlide || this.visibleItems;
 };
 
 /**
@@ -1367,6 +1367,7 @@ FluidSlider.prototype.update = function() {
   this.setItemWidth();
   return this;
 };
+
 
 });
 require.alias("component-events/index.js", "fluid-slider/deps/events/index.js");
