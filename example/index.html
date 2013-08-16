@@ -44,7 +44,11 @@
           1200: 4
         };
         var insta = slider(el, { breakpointItems: breakpointItems });
-        insta.swiper.on('show', function(i) {
+        insta.swiper.on('show', function(i) {          
+          console.log('Current visible', insta.swiper.currentVisible);
+          console.log('Items to Swipe', insta.swiper.itemsToSwipe);
+          console.log('isLast', insta.swiper.isLast());
+          console.log('isFirst', insta.swiper.isFirst());
           console.log('Current index: ', i);
         });
     </script>

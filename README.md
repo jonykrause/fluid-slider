@@ -18,7 +18,7 @@ Create a fluid slider object for `el`. This should be a container element that w
 Supports the options:
  
  - sensitivity: ```{Number}``` Sensitivity while touchmoving, defaults to 50
- - itemsToSlide: ```{Number}``` Amount of items to slide, defaults to visibleItems/2
+ - itemsToSlide: ```{Number}``` Amount of items to slide, defaults to visibleItems
  - breakpointItems: ```{Object}``` Store viewport width/px(key) and amount(val) of visible items f.e. {0: 1, 500: 2}
 
 

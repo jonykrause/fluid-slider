@@ -22,7 +22,7 @@ module.exports = FluidSlider;
  *  * Options:
  *  - `breakpointItems`: {Object} store viewport width/px(key) and amount(val) of visible items f.e. {0: 1, 500: 2}
  *  - `sensitivity`: {Number} Sensitivity while touchmoving
- *  - `itemsToSlide`: {Number} amount of items to slide
+ *  - `itemsToSlide`: {Number} amount of items to slide, defaults to visible items
  */
 
 function FluidSlider(el, options) {
@@ -76,7 +76,7 @@ FluidSlider.prototype.setVisibleItems = function(breakpoints) {
  */
 
 FluidSlider.prototype.setitemsToSlide = function() {
-  return this.swiper.itemsToSwipe = this.options.itemsToSlide || Math.ceil(this.visibleItems/2);
+  return this.swiper.itemsToSwipe = this.options.itemsToSlide || this.visibleItems;
 };
 
 /**
