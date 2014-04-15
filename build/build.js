@@ -1,35 +1,19 @@
-
 /**
- * Require the given path.
+ * Require the module at `name`.
  *
- * @param {String} path
+ * @param {String} name
  * @return {Object} exports
  * @api public
  */
 
-function require(path, parent, orig) {
-  var resolved = require.resolve(path);
+function require(name) {
+  var module = require.modules[name];
+  if (!module) throw new Error('failed to require "' + name + '"');
 
-  // lookup failed
-  if (null == resolved) {
-    orig = orig || path;
-    parent = parent || 'root';
-    var err = new Error('Failed to require "' + orig + '" from "' + parent + '"');
-    err.path = orig;
-    err.parent = parent;
-    err.require = true;
-    throw err;
-  }
-
-  var module = require.modules[resolved];
-
-  // perform real require()
-  // by invoking the module's
-  // registered function
-  if (!module.exports) {
-    module.exports = {};
+  if (!('exports' in module) && typeof module.definition === 'function') {
     module.client = module.component = true;
-    module.call(this, module.exports, require.relative(resolved), module);
+    module.definition.call(this, module.exports = {}, module);
+    delete module.definition;
   }
 
   return module.exports;
@@ -42,164 +26,436 @@ function require(path, parent, orig) {
 require.modules = {};
 
 /**
- * Registered aliases.
- */
-
-require.aliases = {};
-
-/**
- * Resolve `path`.
+ * Register module at `name` with callback `definition`.
  *
- * Lookup:
- *
- *   - PATH/index.js
- *   - PATH.js
- *   - PATH
- *
- * @param {String} path
- * @return {String} path or null
- * @api private
- */
-
-require.resolve = function(path) {
-  if (path.charAt(0) === '/') path = path.slice(1);
-  var index = path + '/index.js';
-
-  var paths = [
-    path,
-    path + '.js',
-    path + '.json',
-    path + '/index.js',
-    path + '/index.json'
-  ];
-
-  for (var i = 0; i < paths.length; i++) {
-    var path = paths[i];
-    if (require.modules.hasOwnProperty(path)) return path;
-  }
-
-  if (require.aliases.hasOwnProperty(index)) {
-    return require.aliases[index];
-  }
-};
-
-/**
- * Normalize `path` relative to the current path.
- *
- * @param {String} curr
- * @param {String} path
- * @return {String}
- * @api private
- */
-
-require.normalize = function(curr, path) {
-  var segs = [];
-
-  if ('.' != path.charAt(0)) return path;
-
-  curr = curr.split('/');
-  path = path.split('/');
-
-  for (var i = 0; i < path.length; ++i) {
-    if ('..' == path[i]) {
-      curr.pop();
-    } else if ('.' != path[i] && '' != path[i]) {
-      segs.push(path[i]);
-    }
-  }
-
-  return curr.concat(segs).join('/');
-};
-
-/**
- * Register module at `path` with callback `definition`.
- *
- * @param {String} path
+ * @param {String} name
  * @param {Function} definition
  * @api private
  */
 
-require.register = function(path, definition) {
-  require.modules[path] = definition;
+require.register = function (name, definition) {
+  require.modules[name] = {
+    definition: definition
+  };
 };
 
 /**
- * Alias a module definition.
+ * Define a module's exports immediately with `exports`.
  *
- * @param {String} from
- * @param {String} to
+ * @param {String} name
+ * @param {Generic} exports
  * @api private
  */
 
-require.alias = function(from, to) {
-  if (!require.modules.hasOwnProperty(from)) {
-    throw new Error('Failed to alias "' + from + '", it does not exist');
+require.define = function (name, exports) {
+  require.modules[name] = {
+    exports: exports
+  };
+};
+require.register("component~stack@master", function (exports, module) {
+
+/**
+ * Expose `stack()`.
+ */
+
+module.exports = stack;
+
+/**
+ * Return the stack.
+ *
+ * @return {Array}
+ * @api public
+ */
+
+function stack() {
+  var orig = Error.prepareStackTrace;
+  Error.prepareStackTrace = function(_, stack){ return stack; };
+  var err = new Error;
+  Error.captureStackTrace(err, arguments.callee);
+  var stack = err.stack;
+  Error.prepareStackTrace = orig;
+  return stack;
+}
+});
+
+require.register("jkroso~type@1.1.0", function (exports, module) {
+
+var toString = {}.toString
+var DomNode = typeof window != 'undefined'
+  ? window.Node
+  : Function
+
+/**
+ * Return the type of `val`.
+ *
+ * @param {Mixed} val
+ * @return {String}
+ * @api public
+ */
+
+module.exports = exports = function(x){
+  var type = typeof x
+  if (type != 'object') return type
+  type = types[toString.call(x)]
+  if (type) return type
+  if (x instanceof DomNode) switch (x.nodeType) {
+    case 1:  return 'element'
+    case 3:  return 'text-node'
+    case 9:  return 'document'
+    case 11: return 'document-fragment'
+    default: return 'dom-node'
   }
-  require.aliases[to] = from;
-};
+}
+
+var types = exports.types = {
+  '[object Function]': 'function',
+  '[object Date]': 'date',
+  '[object RegExp]': 'regexp',
+  '[object Arguments]': 'arguments',
+  '[object Array]': 'array',
+  '[object String]': 'string',
+  '[object Null]': 'null',
+  '[object Undefined]': 'undefined',
+  '[object Number]': 'number',
+  '[object Boolean]': 'boolean',
+  '[object Object]': 'object',
+  '[object Text]': 'text-node',
+  '[object Uint8Array]': 'bit-array',
+  '[object Uint16Array]': 'bit-array',
+  '[object Uint32Array]': 'bit-array',
+  '[object Uint8ClampedArray]': 'bit-array',
+  '[object Error]': 'error',
+  '[object FormData]': 'form-data',
+  '[object File]': 'file',
+  '[object Blob]': 'blob'
+}
+
+});
+
+require.register("jkroso~equals@0.3.6", function (exports, module) {
+
+var type = require("jkroso~type@1.1.0")
 
 /**
- * Return a require function relative to the `parent` path.
- *
- * @param {String} parent
- * @return {Function}
- * @api private
+ * expose equals
  */
 
-require.relative = function(parent) {
-  var p = require.normalize(parent, '..');
+module.exports = equals
+equals.compare = compare
 
-  /**
-   * lastIndexOf helper.
-   */
+/**
+ * assert all values are equal
+ *
+ * @param {Any} [...]
+ * @return {Boolean}
+ */
 
-  function lastIndexOf(arr, obj) {
-    var i = arr.length;
-    while (i--) {
-      if (arr[i] === obj) return i;
+ function equals(){
+  var i = arguments.length - 1
+  while (i > 0) {
+    if (!compare(arguments[i], arguments[--i])) return false
+  }
+  return true
+}
+
+// (any, any, [array]) -> boolean
+function compare(a, b, memos){
+  // All identical values are equivalent
+  if (a === b) return true
+  var fnA = types[type(a)]
+  var fnB = types[type(b)]
+  return fnA && fnA === fnB
+    ? fnA(a, b, memos)
+    : false
+}
+
+var types = {}
+
+// (Number) -> boolean
+types.number = function(a){
+  // NaN check
+  return a !== a
+}
+
+// (function, function, array) -> boolean
+types['function'] = function(a, b, memos){
+  return a.toString() === b.toString()
+    // Functions can act as objects
+    && types.object(a, b, memos)
+    && compare(a.prototype, b.prototype)
+}
+
+// (date, date) -> boolean
+types.date = function(a, b){
+  return +a === +b
+}
+
+// (regexp, regexp) -> boolean
+types.regexp = function(a, b){
+  return a.toString() === b.toString()
+}
+
+// (DOMElement, DOMElement) -> boolean
+types.element = function(a, b){
+  return a.outerHTML === b.outerHTML
+}
+
+// (textnode, textnode) -> boolean
+types.textnode = function(a, b){
+  return a.textContent === b.textContent
+}
+
+// decorate `fn` to prevent it re-checking objects
+// (function) -> function
+function memoGaurd(fn){
+  return function(a, b, memos){
+    if (!memos) return fn(a, b, [])
+    var i = memos.length, memo
+    while (memo = memos[--i]) {
+      if (memo[0] === a && memo[1] === b) return true
     }
-    return -1;
+    return fn(a, b, memos)
+  }
+}
+
+types['arguments'] =
+types.array = memoGaurd(compareArrays)
+
+// (array, array, array) -> boolean
+function compareArrays(a, b, memos){
+  var i = a.length
+  if (i !== b.length) return false
+  memos.push([a, b])
+  while (i--) {
+    if (!compare(a[i], b[i], memos)) return false
+  }
+  return true
+}
+
+types.object = memoGaurd(compareObjects)
+
+// (object, object, array) -> boolean
+function compareObjects(a, b, memos) {
+  var ka = getEnumerableProperties(a)
+  var kb = getEnumerableProperties(b)
+  var i = ka.length
+
+  // same number of properties
+  if (i !== kb.length) return false
+
+  // although not necessarily the same order
+  ka.sort()
+  kb.sort()
+
+  // cheap key test
+  while (i--) if (ka[i] !== kb[i]) return false
+
+  // remember
+  memos.push([a, b])
+
+  // iterate again this time doing a thorough check
+  i = ka.length
+  while (i--) {
+    var key = ka[i]
+    if (!compare(a[key], b[key], memos)) return false
   }
 
-  /**
-   * The relative require() itself.
-   */
+  return true
+}
 
-  function localRequire(path) {
-    var resolved = localRequire.resolve(path);
-    return require(resolved, parent, path);
+// (object) -> array
+function getEnumerableProperties (object) {
+  var result = []
+  for (var k in object) if (k !== 'constructor') {
+    result.push(k)
   }
+  return result
+}
 
-  /**
-   * Resolve relative to the parent.
-   */
+});
 
-  localRequire.resolve = function(path) {
-    var c = path.charAt(0);
-    if ('/' == c) return path.slice(1);
-    if ('.' == c) return require.normalize(p, path);
+require.register("component~assert@0.3.0", function (exports, module) {
 
-    // resolve deps by returning
-    // the dep in the nearest "deps"
-    // directory
-    var segs = parent.split('/');
-    var i = lastIndexOf(segs, 'deps') + 1;
-    if (!i) i = 0;
-    path = segs.slice(0, i + 1).join('/') + '/deps/' + path;
-    return path;
-  };
+/**
+ * Module dependencies.
+ */
 
-  /**
-   * Check if module is defined at `path`.
-   */
+var stack = require("component~stack@master");
+var equals = require("jkroso~equals@0.3.6");
 
-  localRequire.exists = function(path) {
-    return require.modules.hasOwnProperty(localRequire.resolve(path));
-  };
+/**
+ * Assert `expr` with optional failure `msg`.
+ *
+ * @param {Mixed} expr
+ * @param {String} [msg]
+ * @api public
+ */
 
-  return localRequire;
+module.exports = exports = function (expr, msg) {
+  if (expr) return;
+  throw new Error(message());
 };
-require.register("component-event/index.js", function(exports, require, module){
+
+/**
+ * Assert `actual` is weak equal to `expected`.
+ *
+ * @param {Mixed} actual
+ * @param {Mixed} expected
+ * @param {String} [msg]
+ * @api public
+ */
+
+exports.equal = function (actual, expected, msg) {
+  if (actual == expected) return;
+  throw new Error(message());
+};
+
+/**
+ * Assert `actual` is not weak equal to `expected`.
+ *
+ * @param {Mixed} actual
+ * @param {Mixed} expected
+ * @param {String} [msg]
+ * @api public
+ */
+
+exports.notEqual = function (actual, expected, msg) {
+  if (actual != expected) return;
+  throw new Error(message());
+};
+
+/**
+ * Assert `actual` is deep equal to `expected`.
+ *
+ * @param {Mixed} actual
+ * @param {Mixed} expected
+ * @param {String} [msg]
+ * @api public
+ */
+
+exports.deepEqual = function (actual, expected, msg) {
+  if (equals(actual, expected)) return;
+  throw new Error(message());
+};
+
+/**
+ * Assert `actual` is not deep equal to `expected`.
+ *
+ * @param {Mixed} actual
+ * @param {Mixed} expected
+ * @param {String} [msg]
+ * @api public
+ */
+
+exports.notDeepEqual = function (actual, expected, msg) {
+  if (!equals(actual, expected)) return;
+  throw new Error(message());
+};
+
+/**
+ * Assert `actual` is strict equal to `expected`.
+ *
+ * @param {Mixed} actual
+ * @param {Mixed} expected
+ * @param {String} [msg]
+ * @api public
+ */
+
+exports.strictEqual = function (actual, expected, msg) {
+  if (actual === expected) return;
+  throw new Error(message());
+};
+
+/**
+ * Assert `actual` is not strict equal to `expected`.
+ *
+ * @param {Mixed} actual
+ * @param {Mixed} expected
+ * @param {String} [msg]
+ * @api public
+ */
+
+exports.notStrictEqual = function (actual, expected, msg) {
+  if (actual !== expected) return;
+  throw new Error(message());
+};
+
+/**
+ * Assert `block` throws an `error`.
+ *
+ * @param {Function} block
+ * @param {Function} [error]
+ * @param {String} [msg]
+ * @api public
+ */
+
+exports.throws = function (block, error, msg) {
+  var err;
+  try {
+    block();
+  } catch (e) {
+    err = e;
+  }
+  if (!err) throw new Error(message());
+  if (error && !(err instanceof error)) throw new Error(message());
+};
+
+/**
+ * Assert `block` doesn't throw an `error`.
+ *
+ * @param {Function} block
+ * @param {Function} [error]
+ * @param {String} [msg]
+ * @api public
+ */
+
+exports.doesNotThrow = function (block, error, msg) {
+  var err;
+  try {
+    block();
+  } catch (e) {
+    err = e;
+  }
+  if (error && (err instanceof error)) throw new Error(message());
+  if (err) throw new Error(message());
+};
+
+/**
+ * Create a message from the call stack.
+ *
+ * @return {String}
+ * @api private
+ */
+
+function message() {
+  if (!Error.captureStackTrace) return 'assertion failed';
+  var callsite = stack()[2];
+  var fn = callsite.getFunctionName();
+  var file = callsite.getFileName();
+  var line = callsite.getLineNumber() - 1;
+  var col = callsite.getColumnNumber() - 1;
+  var src = getScript(file);
+  line = src.split('\n')[line].slice(col);
+  return line.match(/assert\((.*)\)/)[1].trim();
+}
+
+/**
+ * Load contents of `script`.
+ *
+ * @param {String} script
+ * @return {String}
+ * @api private
+ */
+
+function getScript(script) {
+  var xhr = new XMLHttpRequest;
+  xhr.open('GET', script, false);
+  xhr.send(null);
+  return xhr.responseText;
+}
+});
+
+require.register("component~event@0.1.0", function (exports, module) {
 
 /**
  * Bind `el` event `type` to `fn`.
@@ -241,8 +497,10 @@ exports.unbind = function(el, type, fn, capture){
   return fn;
 };
 
+
 });
-require.register("component-event-manager/index.js", function(exports, require, module){
+
+require.register("component~event-manager@1.0.0", function (exports, module) {
 
 
 /**
@@ -303,27 +561,11 @@ EventManager.prototype.onunbind = function(fn){
  *
  * @param {String} event
  * @param {String} [method]
- * @return {Function} callback
+ * @return {EventManager}
  * @api public
  */
 
 EventManager.prototype.bind = function(event, method){
-  var fn = this.addBinding.apply(this, arguments);
-  if (this._onbind) this._onbind(event, method, fn);
-  this._bind(event, fn);
-  return fn;
-};
-
-/**
- * Add event binding.
- *
- * @param {String} event
- * @param {String} method
- * @return {Function} callback
- * @api private
- */
-
-EventManager.prototype.addBinding = function(event, method){
   var obj = this.obj;
   var method = method || 'on' + event;
   var args = [].slice.call(arguments, 2);
@@ -338,7 +580,10 @@ EventManager.prototype.addBinding = function(event, method){
   this._bindings[event] = this._bindings[event] || {};
   this._bindings[event][method] = callback;
 
-  return callback;
+  // bind
+  this._bind(event, callback);
+
+  return this;
 };
 
 /**
@@ -351,7 +596,6 @@ EventManager.prototype.addBinding = function(event, method){
  *
  * @param {String} [event]
  * @param {String} [method]
- * @return {Function} callback
  * @api public
  */
 
@@ -359,9 +603,7 @@ EventManager.prototype.unbind = function(event, method){
   if (0 == arguments.length) return this.unbindAll();
   if (1 == arguments.length) return this.unbindAllOf(event);
   var fn = this._bindings[event][method];
-  if (this._onunbind) this._onunbind(event, method, fn);
   this._unbind(event, fn);
-  return fn;
 };
 
 /**
@@ -392,14 +634,15 @@ EventManager.prototype.unbindAllOf = function(event){
 };
 
 });
-require.register("component-events/index.js", function(exports, require, module){
+
+require.register("component~events@1.0.2", function (exports, module) {
 
 /**
  * Module dependencies.
  */
 
-var Manager = require('event-manager')
-  , event = require('event');
+var Manager = require("component~event-manager@1.0.0")
+  , event = require("component~event@0.1.0");
 
 /**
  * Return a new event manager.
@@ -419,31 +662,10 @@ module.exports = function(target, obj){
   return manager;
 };
 
-});
-require.register("component-has-translate3d/index.js", function(exports, require, module){
-
-var prop = require('transform-property');
-// IE8<= doesn't have `getComputedStyle`
-if (!prop || !window.getComputedStyle) return module.exports = false;
-
-var map = {
-  webkitTransform: '-webkit-transform',
-  OTransform: '-o-transform',
-  msTransform: '-ms-transform',
-  MozTransform: '-moz-transform',
-  transform: 'transform'
-};
-
-// from: https://gist.github.com/lorenzopolidori/3794226
-var el = document.createElement('div');
-el.style[prop] = 'translate3d(1px,1px,1px)';
-document.body.insertBefore(el, null);
-var val = getComputedStyle(el).getPropertyValue(map[prop]);
-document.body.removeChild(el);
-module.exports = null != val && val.length && 'none' != val;
 
 });
-require.register("component-transform-property/index.js", function(exports, require, module){
+
+require.register("component~transform-property@0.0.1", function (exports, module) {
 
 var styles = [
   'webkitTransform',
@@ -465,14 +687,38 @@ for (var i = 0; i < styles.length; i++) {
 }
 
 });
-require.register("jonykrause-translate/index.js", function(exports, require, module){
+
+require.register("component~has-translate3d@0.0.2", function (exports, module) {
+
+var prop = require("component~transform-property@0.0.1");
+if (!prop) return module.exports = false;
+
+var map = {
+  webkitTransform: '-webkit-transform',
+  OTransform: '-o-transform',
+  msTransform: '-ms-transform',
+  MozTransform: '-moz-transform',
+  transform: 'transform'
+};
+
+// from: https://gist.github.com/lorenzopolidori/3794226
+var el = document.createElement('div');
+el.style[prop] = 'translate3d(1px,1px,1px)';
+document.body.insertBefore(el, null);
+var val = window.getComputedStyle(el).getPropertyValue(map[prop]);
+document.body.removeChild(el);
+module.exports = null != val && val.length && 'none' != val;
+
+});
+
+require.register("jonykrause~translate@flexible-unit", function (exports, module) {
 
 /**
  * Module dependencies.
  */
 
-var transform = require('transform-property');
-var has3d = require('has-translate3d');
+var transform = require("component~transform-property@0.0.1");
+var has3d = require("component~has-translate3d@0.0.2");
 
 /**
  * Expose `translate`.
@@ -506,7 +752,8 @@ function translate(el, x, y, unit) {
 
 
 });
-require.register("component-emitter/index.js", function(exports, require, module){
+
+require.register("component~emitter@1.0.0", function (exports, module) {
 
 /**
  * Expose `Emitter`.
@@ -665,7 +912,8 @@ Emitter.prototype.hasListeners = function(event){
 };
 
 });
-require.register("jkroso-computed-style/index.js", function(exports, require, module){
+
+require.register("jkroso~computed-style@0.1.0", function (exports, module) {
 
 /**
  * Get the computed style of a DOM element
@@ -687,16 +935,17 @@ if (!module.exports) {
 }
 
 });
-require.register("jonykrause-swipe/index.js", function(exports, require, module){
+
+require.register("jonykrause~swipe@translate/swipe-items", function (exports, module) {
 
 /**
  * Module dependencies.
  */
 
-var translate = require('translate');
-var style = require('computed-style');
-var Emitter = require('emitter');
-var events = require('events');
+var translate = require("jonykrause~translate@flexible-unit");
+var style = require("jkroso~computed-style@0.1.0");
+var Emitter = require("component~emitter@1.0.0");
+var events = require("component~events@1.0.2");
 var min = Math.min;
 var max = Math.max;
 
@@ -1160,91 +1409,15 @@ function visible(el) {
 }
 
 });
-require.register("component-stack/index.js", function(exports, require, module){
 
-/**
- * Expose `stack()`.
- */
-
-module.exports = stack;
-
-/**
- * Return the stack.
- *
- * @return {Array}
- * @api public
- */
-
-function stack() {
-  var orig = Error.prepareStackTrace;
-  Error.prepareStackTrace = function(_, stack){ return stack; };
-  var err = new Error;
-  Error.captureStackTrace(err, arguments.callee);
-  var stack = err.stack;
-  Error.prepareStackTrace = orig;
-  return stack;
-}
-});
-require.register("component-assert/index.js", function(exports, require, module){
-/**
- * Module dependencies.
- */
-
-var stack = require('stack');
-
-/**
- * Load contents of `script`.
- *
- * @param {String} script
- * @return {String}
- * @api private
- */
-
-function getScript(script) {
-  var xhr = new XMLHttpRequest;
-  xhr.open('GET', script, false);
-  xhr.send(null);
-  return xhr.responseText;
-}
-
-/**
- * Assert `expr` with optional failure `msg`.
- *
- * @param {Mixed} expr
- * @param {String} [msg]
- * @api public
- */
-
-module.exports = function(expr, msg){
-  if (expr) return;
-  if (!msg) {
-    if (Error.captureStackTrace) {
-      var callsite = stack()[1];
-      var fn = callsite.getFunctionName();
-      var file = callsite.getFileName();
-      var line = callsite.getLineNumber() - 1;
-      var col = callsite.getColumnNumber() - 1;
-      var src = getScript(file);
-      line = src.split('\n')[line].slice(col);
-      expr = line.match(/assert\((.*)\)/)[1].trim();
-      msg = expr;
-    } else {
-      msg = 'assertion failed';
-    }
-  }
-
-  throw new Error(msg);
-};
-
-});
-require.register("fluid-slider/index.js", function(exports, require, module){
+require.register("fluid-slider", function (exports, module) {
 
 /**
  * Module dependencies.
  */
 
-var swipe = require('swipe');
-var events = require('events');
+var swipe = require("jonykrause~swipe@translate/swipe-items");
+var events = require("component~events@1.0.2");
 /**
  * Expose `FluidSlider`.
  */
@@ -1370,47 +1543,5 @@ FluidSlider.prototype.update = function() {
 
 
 });
-require.alias("component-events/index.js", "fluid-slider/deps/events/index.js");
-require.alias("component-events/index.js", "events/index.js");
-require.alias("component-event/index.js", "component-events/deps/event/index.js");
 
-require.alias("component-event-manager/index.js", "component-events/deps/event-manager/index.js");
-
-require.alias("jonykrause-translate/index.js", "fluid-slider/deps/translate/index.js");
-require.alias("jonykrause-translate/index.js", "fluid-slider/deps/translate/index.js");
-require.alias("jonykrause-translate/index.js", "translate/index.js");
-require.alias("component-has-translate3d/index.js", "jonykrause-translate/deps/has-translate3d/index.js");
-require.alias("component-transform-property/index.js", "component-has-translate3d/deps/transform-property/index.js");
-
-require.alias("component-transform-property/index.js", "jonykrause-translate/deps/transform-property/index.js");
-
-require.alias("jonykrause-translate/index.js", "jonykrause-translate/index.js");
-
-require.alias("jonykrause-swipe/index.js", "fluid-slider/deps/swipe/index.js");
-require.alias("jonykrause-swipe/index.js", "swipe/index.js");
-require.alias("component-emitter/index.js", "jonykrause-swipe/deps/emitter/index.js");
-
-require.alias("component-event/index.js", "jonykrause-swipe/deps/event/index.js");
-
-require.alias("component-events/index.js", "jonykrause-swipe/deps/events/index.js");
-require.alias("component-event/index.js", "component-events/deps/event/index.js");
-
-require.alias("component-event-manager/index.js", "component-events/deps/event-manager/index.js");
-
-require.alias("jonykrause-translate/index.js", "jonykrause-swipe/deps/translate/index.js");
-require.alias("jonykrause-translate/index.js", "jonykrause-swipe/deps/translate/index.js");
-require.alias("component-has-translate3d/index.js", "jonykrause-translate/deps/has-translate3d/index.js");
-require.alias("component-transform-property/index.js", "component-has-translate3d/deps/transform-property/index.js");
-
-require.alias("component-transform-property/index.js", "jonykrause-translate/deps/transform-property/index.js");
-
-require.alias("jonykrause-translate/index.js", "jonykrause-translate/index.js");
-
-require.alias("jkroso-computed-style/index.js", "jonykrause-swipe/deps/computed-style/index.js");
-
-require.alias("component-assert/index.js", "fluid-slider/deps/assert/index.js");
-require.alias("component-assert/index.js", "assert/index.js");
-require.alias("component-stack/index.js", "component-assert/deps/stack/index.js");
-
-require.alias("fluid-slider/index.js", "fluid-slider/index.js");
-
+require("fluid-slider")
