@@ -82,9 +82,11 @@
       </ul>
     </div>
 
+    <div id="mocha"></div>
     <script src="../build/build.js"></script>
+    <script src="./chai.js"></script>
     <script>
-      var assert = require('assert');
+      var assert = chai.assert;
       var slider = require('fluid-slider');
       var el = document.getElementById('slider');
       var s = slider(el);
