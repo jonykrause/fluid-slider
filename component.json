@@ -7,7 +7,7 @@
   "dependencies": {
     "component/events": "*",
     "jonykrause/translate": "flexible-unit",
-    "jonykrause/swipe": "translate/swipe-items"
+    "jonykrause/swipe": "update/translate/swipe-items"
   },
   "development": {
     "component/assert": "*"
