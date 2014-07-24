@@ -2,13 +2,12 @@
   "name": "fluid-slider",
   "repo": "jonykrause/fluid-slider",
   "description": "fluid slider",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "keywords": [],
   "dependencies": {
     "component/events": "1.0.2",
     "jonykrause/translate": "flexible-unit",
-    "jonykrause/swipe": "translate/swipe-items",
-    "component/assert": "*"
+    "jonykrause/swipe": "update/translate/swipe-items"
   },
   "development": {
     "component/assert": "*"
@@ -19,6 +18,6 @@
     "index.js"
   ],
   "styles": [
-    "fluid-slider.css"
+    "style.css"
   ]
 }
