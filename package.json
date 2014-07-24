@@ -1,6 +1,6 @@
 {
   "name": "fluid-slider",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Percentage-based Slider component built around the [Swipe Component](https://github.com/component/swipe). Useful for responsive projects because of configurable breakpoints/slides. Be sure to check out the [demo](http://jonykrause.github.io/fluid-slider/).",
   "main": "index.js",
   "directories": {
