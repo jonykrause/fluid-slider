@@ -1,0 +1,44 @@
+.swipe-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.swipe-list:after,
+.swipe-list:before {
+  content: "";
+  display: table;
+}
+
+.swipe-list:after {
+  clear: both;
+}
+
+.swipe-list {
+  list-style-type: none;
+  position: relative;
+  width: 100%;
+  padding: 0;
+}
+
+.swipe-item {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  border-right: 0.5em solid transparent;
+  border-left: 0.5em solid transparent;
+  float: left;
+}
+
+.swipe-item img {
+  width: 100%;
+}
+
+.swipe-container.touchmoving img,
+.swipe-container.touchmoving a {
+  -webkit-user-select: none;  /* Chrome all / Safari all */
+  -moz-user-select: none;     /* Firefox all */
+  -ms-user-select: none;      /* IE 10+ */
+  -o-user-select: none;
+  user-select: none;   
+  pointer-events: none;
+}
