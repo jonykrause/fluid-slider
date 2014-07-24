@@ -6,7 +6,11 @@ Percentage-based Slider component built around the [Swipe Component](https://git
 
 ## Installation
 
+If you use component:
+
     $ component install jonykrause/fluid-slider
+
+If you don’t use component include [the umd standalone version](https://github.com/jonykrause/fluid-slider/blob/master/index.umd.js)
 
 
 ## API
