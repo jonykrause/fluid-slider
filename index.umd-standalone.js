@@ -424,28 +424,23 @@ module.exports = function(target, obj){
 require.register("component-has-translate3d/index.js", function(exports, require, module){
 
 var prop = require('transform-property');
+if (!prop) return module.exports = false;
 
-// IE <=8 doesn't have `getComputedStyle`
-if (!prop || !window.getComputedStyle) {
-  module.exports = false;
+var map = {
+  webkitTransform: '-webkit-transform',
+  OTransform: '-o-transform',
+  msTransform: '-ms-transform',
+  MozTransform: '-moz-transform',
+  transform: 'transform'
+};
 
-} else {
-  var map = {
-    webkitTransform: '-webkit-transform',
-    OTransform: '-o-transform',
-    msTransform: '-ms-transform',
-    MozTransform: '-moz-transform',
-    transform: 'transform'
-  };
-
-  // from: https://gist.github.com/lorenzopolidori/3794226
-  var el = document.createElement('div');
-  el.style[prop] = 'translate3d(1px,1px,1px)';
-  document.body.insertBefore(el, null);
-  var val = getComputedStyle(el).getPropertyValue(map[prop]);
-  document.body.removeChild(el);
-  module.exports = null != val && val.length && 'none' != val;
-}
+// from: https://gist.github.com/lorenzopolidori/3794226
+var el = document.createElement('div');
+el.style[prop] = 'translate3d(1px,1px,1px)';
+document.body.insertBefore(el, null);
+var val = window.getComputedStyle(el).getPropertyValue(map[prop]);
+document.body.removeChild(el);
+module.exports = null != val && val.length && 'none' != val;
 
 });
 require.register("component-transform-property/index.js", function(exports, require, module){
@@ -736,9 +731,9 @@ module.exports = window.getComputedStyle
 
 // Fallback to elem.currentStyle for IE < 9
 if (!module.exports) {
-	module.exports = function (elem) {
-		return elem.currentStyle
-	}
+  module.exports = function (elem) {
+    return elem.currentStyle
+  }
 }
 
 });
@@ -958,6 +953,11 @@ Swipe.prototype.ontouchmove = function(e){
 
   e.preventDefault();
 
+  if (!this.el.classList.contains('is-touchmoving')) {
+    this.el.classList.add('is-touchmoving');
+  }
+
+
   var dir = this.dx < 0 ? 1 : 0;
   if (this.isFirst() && 0 == dir) this.dx /= 2;
   if (this.isLast() && 1 == dir) this.dx /= 2;
@@ -991,6 +991,8 @@ Swipe.prototype.ontouchend = function(e){
 
   // clear
   this.down = null;
+
+  this.el.classList.remove('is-touchmoving');
 
   // first -> next
   if (this.isFirst() && 1 == dir && half) return this.next();
