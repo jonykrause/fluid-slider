@@ -33,12 +33,12 @@
   width: 100%;
 }
 
-.FluidSlider-container.touchmoving img,
-.FluidSlider-container.touchmoving a {
+.FluidSlider-container.is-touchmoving img,
+.FluidSlider-container.is-touchmoving a {
   -webkit-user-select: none;  /* Chrome all / Safari all */
   -moz-user-select: none;     /* Firefox all */
   -ms-user-select: none;      /* IE 10+ */
   -o-user-select: none;
-  user-select: none;   
+  user-select: none;
   pointer-events: none;
 }
