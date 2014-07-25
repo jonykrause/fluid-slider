@@ -99,7 +99,7 @@ FluidSlider.prototype.setElWidth = function() {
 FluidSlider.prototype.getItemWidth = function() {
   var fullWidth = parseInt(this.el.style.width, 10);
   this.swiper.childWidth = fullWidth / this.total / (fullWidth / 100);
-  return parseFloat(this.swiper.childWidth.toFixed(3));
+  return parseFloat(this.swiper.childWidth.toFixed(4) - 0.0001);
 };
 
 /**
