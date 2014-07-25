@@ -200,9 +200,6 @@ require.relative = function(parent) {
   return localRequire;
 };
 require.register("component-event/index.js", function(exports, require, module){
-var bind = window.addEventListener ? 'addEventListener' : 'attachEvent',
-    unbind = window.removeEventListener ? 'removeEventListener' : 'detachEvent',
-    prefix = bind !== 'addEventListener' ? 'on' : '';
 
 /**
  * Bind `el` event `type` to `fn`.
@@ -216,7 +213,11 @@ var bind = window.addEventListener ? 'addEventListener' : 'attachEvent',
  */
 
 exports.bind = function(el, type, fn, capture){
-  el[bind](prefix + type, fn, capture || false);
+  if (el.addEventListener) {
+    el.addEventListener(type, fn, capture);
+  } else {
+    el.attachEvent('on' + type, fn);
+  }
   return fn;
 };
 
@@ -232,9 +233,14 @@ exports.bind = function(el, type, fn, capture){
  */
 
 exports.unbind = function(el, type, fn, capture){
-  el[unbind](prefix + type, fn, capture || false);
+  if (el.removeEventListener) {
+    el.removeEventListener(type, fn, capture);
+  } else {
+    el.detachEvent('on' + type, fn);
+  }
   return fn;
 };
+
 });
 require.register("component-event-manager/index.js", function(exports, require, module){
 
@@ -417,28 +423,23 @@ module.exports = function(target, obj){
 require.register("component-has-translate3d/index.js", function(exports, require, module){
 
 var prop = require('transform-property');
+if (!prop) return module.exports = false;
 
-// IE <=8 doesn't have `getComputedStyle`
-if (!prop || !window.getComputedStyle) {
-  module.exports = false;
+var map = {
+  webkitTransform: '-webkit-transform',
+  OTransform: '-o-transform',
+  msTransform: '-ms-transform',
+  MozTransform: '-moz-transform',
+  transform: 'transform'
+};
 
-} else {
-  var map = {
-    webkitTransform: '-webkit-transform',
-    OTransform: '-o-transform',
-    msTransform: '-ms-transform',
-    MozTransform: '-moz-transform',
-    transform: 'transform'
-  };
-
-  // from: https://gist.github.com/lorenzopolidori/3794226
-  var el = document.createElement('div');
-  el.style[prop] = 'translate3d(1px,1px,1px)';
-  document.body.insertBefore(el, null);
-  var val = getComputedStyle(el).getPropertyValue(map[prop]);
-  document.body.removeChild(el);
-  module.exports = null != val && val.length && 'none' != val;
-}
+// from: https://gist.github.com/lorenzopolidori/3794226
+var el = document.createElement('div');
+el.style[prop] = 'translate3d(1px,1px,1px)';
+document.body.insertBefore(el, null);
+var val = window.getComputedStyle(el).getPropertyValue(map[prop]);
+document.body.removeChild(el);
+module.exports = null != val && val.length && 'none' != val;
 
 });
 require.register("component-transform-property/index.js", function(exports, require, module){
@@ -455,13 +456,13 @@ var el = document.createElement('p');
 var style;
 
 for (var i = 0; i < styles.length; i++) {
-  if (null != el.style[styles[i]]) {
-    style = styles[i];
+  style = styles[i];
+  if (null != el.style[style]) {
+    module.exports = style;
     break;
   }
 }
 
-module.exports = style;
 });
 require.register("jonykrause-translate/index.js", function(exports, require, module){
 
@@ -951,6 +952,11 @@ Swipe.prototype.ontouchmove = function(e){
 
   e.preventDefault();
 
+  if (!this.el.classList.contains('is-touchmoving')) {
+    this.el.classList.add('is-touchmoving');
+  }
+
+
   var dir = this.dx < 0 ? 1 : 0;
   if (this.isFirst() && 0 == dir) this.dx /= 2;
   if (this.isLast() && 1 == dir) this.dx /= 2;
@@ -984,6 +990,8 @@ Swipe.prototype.ontouchend = function(e){
 
   // clear
   this.down = null;
+
+  this.el.classList.remove('is-touchmoving');
 
   // first -> next
   if (this.isFirst() && 1 == dir && half) return this.next();
@@ -1347,7 +1355,7 @@ FluidSlider.prototype.setElWidth = function() {
 FluidSlider.prototype.getItemWidth = function() {
   var fullWidth = parseInt(this.el.style.width, 10);
   this.swiper.childWidth = fullWidth / this.total / (fullWidth / 100);
-  return parseFloat(this.swiper.childWidth.toFixed(3));
+  return parseFloat(this.swiper.childWidth.toFixed(4) - 0.0001);
 };
 
 /**
