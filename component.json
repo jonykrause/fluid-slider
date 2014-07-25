@@ -2,7 +2,7 @@
   "name": "fluid-slider",
   "repo": "jonykrause/fluid-slider",
   "description": "fluid slider",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "keywords": [],
   "dependencies": {
     "component/events": "1.0.2",
